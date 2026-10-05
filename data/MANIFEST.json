@@ -1,0 +1,64 @@
+{
+ "built": "2026-10-05T21:25:46",
+ "files": {
+  "gsm8k_platinum.json": {
+   "n": 1209,
+   "splits": {
+    "nc23": 404,
+    "nc1": 454,
+    "pilot": 200,
+    "reserve": 151
+   },
+   "families": {
+    "natural": 1209
+   },
+   "sha256": "a9132141ef3936f77bc105f1880999508ae07c613e728be4d169b5e33395438a"
+  },
+  "commonsenseqa.json": {
+   "n": 1221,
+   "splits": {
+    "nc23": 408,
+    "nc1": 459,
+    "reserve": 154,
+    "pilot": 200
+   },
+   "families": {
+    "natural": 1221
+   },
+   "sha256": "fa30ebb3620be8bb2b19af79e68103834dcf78617be20fdd7bdfdc24e579ac7b"
+  },
+  "traps_pilot.json": {
+   "n": 100,
+   "splits": {
+    "pilot": 100
+   },
+   "families": {
+    "crt": 50,
+    "modified_classic": 10,
+    "misconception": 40
+   },
+   "sha256": "19e46934d44da1d0ab5a817a66b8ee6d361c676b616503aa50f5f38a7d6170bf"
+  }
+ },
+ "templates": {
+  "bat_ball": 4,
+  "widgets": 4,
+  "lily_pads": 3,
+  "sheep": 4,
+  "race_overtake": 3,
+  "round_trip": 4,
+  "percent_up_down": 4,
+  "stacked_discounts": 4,
+  "log_cutting": 3,
+  "fence_posts": 3,
+  "clock_chimes": 2,
+  "stairs": 3,
+  "two_pipes": 3,
+  "snail_well": 3,
+  "mean_of_means": 3,
+  "widgets_modified": 3,
+  "lily_pads_modified": 3,
+  "monty_hall_ignorant_host": 2,
+  "two_children_ordered": 2
+ }
+}

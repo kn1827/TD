@@ -1,0 +1,12 @@
+# Laptop dry run with --fake (no server, no GPU): every stage + the gate report on fake answers.
+# Writes to results/dry_run/, never to the pilot folder (scripts refuse --fake otherwise).
+extends: configs/g1.yaml
+run_name: dry_run
+screen:
+  tasks: {gsm8k_platinum: 20, commonsenseqa: 20, traps_pilot: 100}
+mad:
+  tasks: {gsm8k_platinum: 8, commonsenseqa: 8, traps_pilot: 8}
+messages:
+  items: {gsm8k_platinum: 6, commonsenseqa: 4, traps_pilot: 10}
+annotation:
+  n_per_level: 12

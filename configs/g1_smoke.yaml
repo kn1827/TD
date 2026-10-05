@@ -1,0 +1,10 @@
+# Smoke test of the whole G1 pipeline on Kaggle (bash kaggle/run_g1.sh smoke, ~20-30 min):
+# a few items per task through S1-S4 on both lanes, separate run folder.
+extends: configs/g1.yaml
+run_name: g1_smoke
+mad:
+  graphs: [complete6]
+messages:
+  items: {gsm8k_platinum: 2, commonsenseqa: 1, traps_pilot: 2}
+annotation:
+  n_per_level: 4
