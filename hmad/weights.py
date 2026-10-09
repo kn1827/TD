@@ -88,7 +88,18 @@ class WeightStore:
     def _fetch(self, key: str, protect: set) -> None:
         try:
             self._make_room(key, protect | {key})
-            self._download(key)
+            try:
+                self._download(key)
+            except OSError as e:
+                # ENOSPC / EROFS: a cloud session's real disk quota can be far below what `df`
+                # reports. Free everything not needed right now and try once more.
+                print(f"[weights] {key}: {e}; deleting unprotected cached models and retrying",
+                      flush=True)
+                shutil.rmtree(self.cache / key, ignore_errors=True)
+                for p in self.cache.iterdir():
+                    if p.is_dir() and p.name not in protect:
+                        shutil.rmtree(p, ignore_errors=True)
+                self._download(key)
         except Exception as e:  # noqa: BLE001 — reported when the model is needed
             self._errors[key] = e
 

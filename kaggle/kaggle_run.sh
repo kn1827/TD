@@ -21,19 +21,36 @@ case "$MODE" in
   *) echo "usage: bash kaggle/kaggle_run.sh {smoke|main}"; exit 1 ;;
 esac
 
-mkdir -p /tmp/models /kaggle/working/results
-FREE_GB=$(df -BG --output=avail /tmp | tail -n 1 | tr -dc '0-9')
-BUDGET=$(( FREE_GB > 30 ? FREE_GB - 10 : 20 ))
+mkdir -p /kaggle/working/results
+# Model cache: the first candidate where 256 MB can really be written (df on Kaggle's overlay shows
+# the whole host's free space, not the session's quota, and /tmp was once mounted read-only).
+CACHE=""
+for d in ${MODEL_CACHE:-} /tmp/models /root/hmad_models /kaggle/tmp/models; do
+  [[ -z "$d" ]] && continue
+  if mkdir -p "$d" 2>/dev/null && dd if=/dev/zero of="$d/.write_test" bs=1M count=256 status=none 2>/dev/null; then
+    rm -f "$d/.write_test"; CACHE=$d; break
+  fi
+  rm -f "$d/.write_test" 2>/dev/null || true
+  echo "[kaggle] $d is not writable, trying the next folder"
+done
+[[ -z "$CACHE" ]] && { echo "[kaggle] no writable folder for model weights"; exit 1; }
+# Budget capped (default 70 GB = 4 models of 7-9B): above that, least-recently-used models are
+# deleted and downloaded again later (~1 min each). Override with CACHE_GB=... if the quota is known.
+FREE_GB=$(df -BG --output=avail "$CACHE" | tail -n 1 | tr -dc '0-9')
+CAP=${CACHE_GB:-70}
+BUDGET=$(( FREE_GB - 10 < CAP ? FREE_GB - 10 : CAP ))
 CFG=/kaggle/working/kaggle_${MODE}.yaml
 cat > "$CFG" <<EOF
 extends: $BASE
 results_dir: /kaggle/working/results
 engine:
-  model_cache_dir: /tmp/models
+  model_cache_dir: $CACHE
   disk_budget_gb: $BUDGET
   model_search_paths: [/kaggle/input]
 EOF
-echo "[kaggle] $MODE: /tmp has ${FREE_GB} GB free -> model cache budget ${BUDGET} GB; config $CFG"
+echo "[kaggle] $MODE: model cache $CACHE (df shows ${FREE_GB} GB free) -> budget ${BUDGET} GB; config $CFG"
+df -h "$CACHE" /kaggle/working | cat
+mount | grep -E " on (/|/tmp|/kaggle/working) " | cat || true
 nvidia-smi --query-gpu=index,name,memory.total --format=csv
 
 set +e

@@ -72,8 +72,8 @@ Thư mục này chỉ chứa phần riêng của Kaggle. Code lõi (`hmad/`, `co
 
 `kaggle_run.sh` tạo một config phụ kế thừa `configs/smoke.yaml` hoặc `configs/exp.yaml`, chỉ đổi phần riêng của Kaggle:
 - kết quả lưu ở `/kaggle/working/results`;
-- trọng số mô hình lưu ở `/tmp/models`, không chiếm 20 GB của `/kaggle/working`;
-- giới hạn đĩa cho mô hình = dung lượng trống của `/tmp` trừ 10 GB;
+- trọng số mô hình lưu ở thư mục ghi được đầu tiên trong `/tmp/models`, `/root/hmad_models` (thử ghi 256 MB trước), không chiếm 20 GB của `/kaggle/working`;
+- giới hạn đĩa cho mô hình mặc định 70 GB (khoảng 4 mô hình), vì `df` trên Kaggle báo dung lượng của cả máy chủ chứ không phải hạn mức thật của phiên. Đặt `CACHE_GB=...` nếu biết hạn mức;
 - tìm bản sao mô hình trong `/kaggle/input` trước khi tải.
 
 ## Lỗi thường gặp
