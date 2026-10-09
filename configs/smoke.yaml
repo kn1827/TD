@@ -1,0 +1,15 @@
+# Smoke test on the GPU machine (~1.5-2 h on Kaggle T4 x2): every model of the extended setup answers
+# a few questions, so that a model failing in fp16 on T4, or not following the answer format without
+# chat template, is found before the main run. Check results/<run>/summary.md: per-model parse rate
+# and round-0 accuracy.
+extends: configs/exp.yaml
+run_name: smoke1
+tasks:
+  gsm8k: {n_items: 4}
+  csqa: {n_items: 4}
+rounds: 1
+setups:
+  extended:
+    models: [qwen2.5-7b, llama3.1-8b, mistral-7b, olmo3-7b, apertus-8b, exaone3.5-7.8b,
+             granite3.3-8b, internlm3-8b, salamandra-7b, glm4-9b, falcon3-7b, kanana1.5-8b]
+    graphs: [sparse]

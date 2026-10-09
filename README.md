@@ -1,68 +1,64 @@
-# TD-MAD v2 — pilot cổng G1
+# TD — debate giữa các agent khác họ mô hình
 
-Code cho pilot của đề án *TD-MAD v2 — Dịch tễ học của đáp án trong multi-agent debate*: sàng câu và đo độ hợp lý π, thu debate theo **giao thức MAD chuẩn của Du et al. (2023)** (prompt nguyên văn từ code của tác giả) trên đồ thị đọc, sinh tin nhắn D0–D3 cho kiểm tra gán nhãn, và báo cáo bốn tiêu chí của cổng G1 (31/10/2026). Thiết kế đầy đủ, lý do chọn model và ước lượng chi phí nằm ở **[EXPERIMENT_G1.md](EXPERIMENT_G1.md)**.
+Ý tưởng 1 của đề án: thu dữ liệu debate để nghiên cứu đáp án đúng/sai lây giữa các agent (`PLAN.md`).
 
-Chạy trên Kaggle "GPU T4 x2": mỗi GPU có một server vLLM và một driver Python riêng, hai lane chạy song song.
+- **Kiến trúc debate:** Society of Mind **theo cài đặt của Choi, Zhu & Li (NeurIPS 2025, "Debate or Vote")**, chuyển nguyên văn sang `hmad/choi.py` từ repo chính thức (MIT, commit 82c929e). `tests/test_choi_fidelity.py` chạy hàm gốc và hàm đã chuyển trên cùng đầu vào, kết quả phải giống hệt. Lý do chọn: `plans/nghien_cuu_giao_thuc_debate.md`.
+- **Agent:** mỗi agent trong một debate là **một họ mô hình khác nhau**. Có 12 họ, cỡ 7–9B, chạy fp16, **không cần xin quyền tải** (`configs/models.yaml`). Phương án mô hình nhỏ 2–5B để dự phòng: `configs/exp_slm.yaml`. Cách chọn và các con số tính toán: `plans/chon_agent_khac_ho.md`.
+
+| Thiết lập | Số agent (= số họ) | Đồ thị (của Choi et al.) |
+|---|---|---|
+| main | 6 | decentralized (đầy đủ), sparse (vòng tròn), centralized (sao) |
+| extended | 12 | sparse |
+| baseline | 3 | decentralized |
+
+Mỗi bộ câu hỏi (GSM8K, CommonsenseQA) có 100 câu. Mỗi debate có vòng 0 + 4 vòng. Tổng cộng 1.000 debate và 33.000 lượt sinh, ước tính 10–19 giờ trên Kaggle T4 × 2, tức 2–3 phiên.
+
+## Chạy
+
+```bash
+pip install -r requirements.txt
+python -m tests.test_choi_fidelity && python -m tests.test_pipeline     # CPU
+python scripts/estimate.py --config configs/exp.yaml                     # bộ nhớ, đĩa, thời gian
+python -m hmad.run --config configs/exp.yaml --fake                      # chạy giả, không cần GPU
+```
+
+Trên máy Linux có GPU (compute capability ≥ 7.5; mô hình 7–9B fp16 cần khoảng 32 GB tổng: 2 × T4 với `tensor_parallel_size: 2`, hoặc 1 GPU ≥ 24 GB với `gpus: [0]`, `tensor_parallel_size: 1`):
+
+```bash
+pip install vllm
+python -m hmad.run --config configs/smoke.yaml     # mỗi mô hình vài câu: kiểm tra trước
+python -m hmad.run --config configs/exp.yaml       # chạy chính; chạy lại cùng lệnh để tiếp tục
+```
+
+Trên Kaggle: `kaggle/README.md`.
+
+## Cách chạy
+
+Mỗi agent là một mô hình khác, và mỗi lúc máy chỉ nạp được một mô hình 7–9B (hai mô hình nếu dùng phương án nhỏ, mỗi GPU một mô hình).
+- Mọi debate tiến đồng bộ theo vòng.
+- Ở mỗi vòng, từng mô hình sinh mọi lượt của mình trong mọi debate, trong một tiến trình vLLM riêng, rồi thoát để giải phóng GPU.
+- Thứ tự mô hình đảo chiều sau mỗi vòng, để tận dụng các mô hình còn trên đĩa. Mô hình kế tiếp được tải trong lúc mô hình hiện tại đang sinh.
+- Mỗi bước (vòng, mô hình) được lưu riêng, nên chạy lại cùng lệnh sẽ tiếp tục từ chỗ dừng.
+
+## Kết quả (`results/<run_name>/`)
+
+| File | Nội dung |
+|---|---|
+| `debates.jsonl` | Mỗi dòng một debate: các mô hình theo vị trí, họ mô hình, câu hỏi, đáp án chuẩn. Mỗi vòng có: nguyên văn trả lời, đáp án đọc được, đúng/sai từng agent, đa số, đáp án của tâm (đồ thị sao), số token, lý do dừng. Kèm nguồn gốc: commit git, revision mô hình, tham số lấy mẫu thực dùng, phiên bản vLLM |
+| `summary.md` | Độ chính xác theo vòng; tỉ lệ đọc được đáp án và độ chính xác vòng 0 của từng mô hình |
+| `plan.json`, `protocol.json` | Danh sách debate và giao thức, cố định từ lần chạy đầu |
+| `phases/r<k>/<model>.*` | Đầu vào và đầu ra từng bước |
 
 ## Cấu trúc
 
 ```
-configs/   models.yaml (model ứng viên + thông số T4) · g1.yaml (pilot) · g1_smoke.yaml
-data/      gsm8k_platinum.json · commonsenseqa.json · traps_pilot.json · MANIFEST.json (đã tạo sẵn)
-tdmad/     answers (trích đáp án) · data (split, render) · traps (bộ bẫy) · graphs (đồ thị đọc)
-           prompts · llm (client vLLM + log chi phí + FakeClient) · screen (S1) · mad (S2)
-           messages (S3) · costmodel (ước lượng T4) · provenance (khóa giao thức, phiên bản, sha256)
-scripts/   prepare_data · run_screen · run_mad · run_messages · make_annotation
-           bench_throughput · estimate_budget · cfg_get
-analysis/  pi_reliability (tiêu chí 1–2) · mad_kernel (ước tính sơ bộ) · annotation_agreement (3)
-           cost_report (4) · g1_gate (báo cáo)
-kaggle/    start_vllm.sh · run_g1.sh · tdmad_g1.ipynb
-docs/      annotation_guide.md
-tests/     test_core.py · test_client.py
+hmad/      choi.py (chuyển từ Choi et al.) · plan.py · run.py (điều phối) · worker.py (vLLM, một mô hình/lần)
+           weights.py (tải trọng số, giới hạn đĩa) · results.py · config.py
+configs/   models.yaml (12 họ 7–9B + dự phòng, revision ghim) · exp.yaml · smoke.yaml
+           models_slm.yaml · exp_slm.yaml (phương án mô hình nhỏ)
+scripts/   estimate.py
+tests/     test_choi_fidelity.py · test_pipeline.py
+kaggle/    run_kaggle.ipynb · kaggle_run.sh · README.md   (chỉ phần riêng của Kaggle)
+plans/     nghien_cuu_giao_thuc_debate.md · chon_agent_khac_ho.md
+debate-or-vote/   repo tham khảo đã clone (không đưa vào git)
 ```
-
-## Chạy thử trên máy (không cần GPU)
-
-```bash
-pip install -r requirements.txt
-python -m tests.test_core
-python -m tests.test_client
-python -m scripts.estimate_budget
-C=configs/dry_run.yaml
-python -m scripts.run_screen --config $C --model qwen2.5-7b --fake
-python -m scripts.run_screen --config $C --model llama3.2-3b --fake
-python -m scripts.run_mad --config $C --pool qwen7-homo --fake
-python -m scripts.run_messages --config $C --generator phi-4 --fake
-python -m scripts.run_messages --config $C --generator mistral-7b --fake
-python -m scripts.make_annotation --config $C
-python -m analysis.g1_gate --config $C
-```
-
-`--fake` dùng `FakeClient` (trả lời giả theo xác suất cố định, không cần server) và chỉ được phép với config có `run_name` chứa "dry"; kết quả nằm ở `results/dry_run/`. Mục đích là kiểm tra pipeline và định dạng file; các con số trong báo cáo không có ý nghĩa.
-
-## Chạy trên Kaggle
-
-1. Upload cả thư mục `TD-MAD` (có `data/`) thành một Kaggle Dataset.
-2. Tạo notebook từ `kaggle/tdmad_g1.ipynb`: Accelerator *GPU T4 x2*, Internet *On*, thêm dataset ở bước 1 làm input.
-3. Phiên 1 chạy lần lượt: test CPU → `bash kaggle/run_g1.sh bench` → `bash kaggle/run_g1.sh smoke` → hai lane song song → `python -m analysis.g1_gate`. Để chạy nền: *Save Version → Save & Run All*.
-4. Nếu phiên bị cắt ở mốc 12 giờ: thêm output của phiên trước làm input, chạy lại notebook. Mọi bước tự bỏ qua phần đã xong.
-5. Gán nhãn: gửi `results/g1_pilot/annotation/annotator_A.csv` và `annotator_B.csv` kèm `docs/annotation_guide.md` cho hai người. Khi nhận lại, chép đè vào cùng chỗ rồi chạy `python -m analysis.g1_gate` (chỉ cần CPU).
-
-Lệnh từng bước (thay cho `run_g1.sh`):
-
-```bash
-bash kaggle/start_vllm.sh one 0 8001 Qwen/Qwen2.5-7B-Instruct-AWQ
-python -m scripts.run_screen --model qwen2.5-7b
-python -m scripts.run_mad --pool qwen7-homo
-bash kaggle/start_vllm.sh stop_port 8001
-```
-
-## Thay đổi thường gặp
-
-- **Đổi model pilot**: sửa `lanes.*.model`, `servers` và `mad.pools` trong `configs/g1.yaml`; model mới phải có trong `configs/models.yaml`. Chạy lại `python -m scripts.estimate_budget` rồi cập nhật `cost_estimate` **trước khi** chạy pilot.
-- **Cùng một model trên 2 GPU** (Khối B, đồng nhất): `bash kaggle/start_vllm.sh dp <hf_id>`, rồi liệt kê cả hai URL dưới `servers:`; client sẽ chia đều request cho hai server.
-- **Đồ thị Khối B**: `--graphs heawood14 rr3_14 cluster3_14` với một pool 14 agent.
-- **Vòng 0 gán trước** (đường thắng thua): `python -m scripts.run_mad --pool qwen7-homo --init assigned` (cần có S1 trước).
-- **Bộ nhớ debate**: `mad.memory: last_round` (mặc định; lý do ở EXPERIMENT_G1.md mục 1.1) hoặc `full` (toàn bộ lịch sử chat như code của Du). Với `full`, khởi động server bằng `MAXLEN=32768` và ước tính lại chi phí.
-- **Lần chạy chính thức**: model được ghim theo commit (`revision` trong `configs/models.yaml`), mỗi bước khóa giao thức vào `results/<run>/meta/` và từ chối chạy tiếp nếu cấu hình đã đổi. Muốn đổi giao thức thì đặt `run_name` mới.
-- Sửa một prompt thì phải tăng `PROMPT_VERSION` trong `tdmad/prompts.py`.

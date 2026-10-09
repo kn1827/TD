@@ -1,202 +1,246 @@
-# Candidate models for TD-MAD on Kaggle "GPU T4 x2" (2 x 16 GB, compute 7.5: fp16 only, no bf16/fp8).
+# Model families for heterogeneous debates: every agent of a debate is a different family.
+# 7-9B instruct models, all downloadable WITHOUT an access request (no gated repo, no HF token needed).
+# The small-model alternative (2-5B, faster) is configs/models_slm.yaml (configs/exp_slm.yaml).
 #
-# hf_id      exact name vLLM serves (must match `--model` in kaggle/start_vllm.sh)
-# revision   HF commit served (start_vllm.sh --revision), pinned 05/10/2026 for the official run
-# chat_template_kwargs  sent with every request: fixes template variables that would otherwise
-#            change between sessions (Llama 3.x writes today's date into its system header)
-# weights_gb size of the safetensors in the repo (checked on HuggingFace 05/10/2026)
-# layers / kv_heads / head_dim  -> KV cache bytes per token = 2 * layers * kv_heads * head_dim * 2
-# t4         proven = ran on Kaggle T4 in DUS (24-25/09/2026) | ok = same arch as a proven model or
-#            standard Llama/Qwen arch, not run yet | risky = fits but slow/tight | no = does not run
-# Used by tdmad/costmodel.py (scripts/estimate_budget.py) and by the run scripts (hf_id).
+# Selection rules (plans/chon_agent_khac_ho.md):
+#   1. a different developer AND an independent pre-training (no fine-tune / distillation of another
+#      family in the list);
+#   2. instruct, non-reasoning model of 7-9B parameters (size class of Choi et al.), run in float16;
+#   3. NOT gated; safetensors weights;
+#   4. architecture supported by vLLM; context >= 8192 tokens;
+#   5. rank = Hugging Face downloads over the last 30 days of the model's official repo (09/10/2026);
+#      setups take the top 3 / top 6 / all 12 (configs/exp.yaml).
+# Facts read from the Hugging Face API on 09/10/2026 (revision = commit pinned that day).
 
-qwen2.5-3b:
-  hf_id: Qwen/Qwen2.5-3B-Instruct-AWQ
-  revision: 3559b226e8ce77211e2c1bd7ddfb7686fec4d6dd
-  family: qwen
-  params_b: 3.09
-  quant: awq
-  weights_gb: 2.69
-  layers: 36
-  kv_heads: 2
-  head_dim: 128
-  t4: ok
-  note: "Qwen-research licence (non-commercial). Smallest KV cache of all candidates (36 KB/token)."
+models:
+  qwen2.5-7b:
+    rank: 1
+    hf_id: Qwen/Qwen2.5-7B-Instruct
+    revision: a09a35458c702b33eeacc393d103063234e8bc28
+    family: Qwen
+    developer: Alibaba Cloud (CN)
+    params: 7615616512
+    layers: 28
+    kv_heads: 4
+    head_dim: 128
+    ctx: 32768
+    license: apache-2.0
+    trust_remote_code: false
+    note: "Used by Choi et al. 2025."
 
-qwen2.5-7b:
-  hf_id: Qwen/Qwen2.5-7B-Instruct-AWQ
-  revision: b25037543e9394b818fdfca67ab2a00ecc7dd641
-  family: qwen
-  params_b: 7.62
-  quant: awq
-  weights_gb: 5.57
-  layers: 28
-  kv_heads: 4
-  head_dim: 128
-  t4: proven
-  note: "DUS solver A. 56 KB/token KV -> ~64 sequences of 2k tokens on one T4."
+  llama3.1-8b:
+    rank: 2
+    hf_id: unsloth/Meta-Llama-3.1-8B-Instruct
+    revision: a2856192dd7c25b842431f39c179a6c2c2f627d1
+    family: Llama
+    developer: Meta (US)
+    params: 8030261248
+    layers: 32
+    kv_heads: 8
+    head_dim: 128
+    ctx: 131072
+    license: llama3.1
+    trust_remote_code: false
+    note: "Used by Choi et al. 2025. Ungated re-upload by Unsloth of meta-llama/Llama-3.1-8B-Instruct
+      (gated; same parameter count; redistribution allowed by the Llama 3.1 licence). Rank from the
+      official repo's downloads (6.07M)."
 
-qwen2.5-14b:
-  hf_id: Qwen/Qwen2.5-14B-Instruct-AWQ
-  revision: 539535859b135b0244c91f3e59816150c8056698
-  family: qwen
-  params_b: 14.8
-  quant: awq
-  weights_gb: 9.98
-  layers: 48
-  kv_heads: 8
-  head_dim: 128
-  t4: risky
-  note: "Only ~3 GB left for KV on one T4; serve with tensor parallel 2 (start_vllm.sh tp)."
+  mistral-7b:
+    rank: 3
+    hf_id: mistralai/Mistral-7B-Instruct-v0.3
+    revision: c170c708c41dac9275d15a8fff4eca08d52bab71
+    family: Mistral
+    developer: Mistral AI (FR)
+    params: 7248023552
+    layers: 32
+    kv_heads: 8
+    head_dim: 128
+    ctx: 32768
+    license: apache-2.0
+    trust_remote_code: false
 
-qwen3-4b:
-  hf_id: Qwen/Qwen3-4B-AWQ
-  revision: 74d4bd2bd4bff9cafc9345221320bffb08b406a3
-  chat_template_kwargs: {enable_thinking: false}   # thinking mode only as a separate factor
-  family: qwen
-  params_b: 4.02
-  quant: awq
-  weights_gb: 2.67
-  layers: 36
-  kv_heads: 8
-  head_dim: 128
-  t4: ok
-  note: "Thinking / non-thinking switch (plan: reasoning-mode factor). Thinking outputs are long."
+  olmo3-7b:
+    rank: 4
+    hf_id: allenai/Olmo-3-7B-Instruct
+    revision: 6e5971d9eba42665f5bd5a0fcf047f299ce1dccc
+    family: OLMo
+    developer: Allen Institute for AI (US)
+    params: 7298011136
+    layers: 32
+    kv_heads: 32
+    head_dim: 128
+    ctx: 65536
+    license: apache-2.0
+    trust_remote_code: false
+    note: "Full multi-head attention: largest KV cache of the list (slower)."
 
-qwen3-8b:
-  hf_id: Qwen/Qwen3-8B-AWQ
-  revision: 4da05a8edb55c6046cce958586c33b61da07bb79
-  chat_template_kwargs: {enable_thinking: false}   # thinking mode only as a separate factor
-  family: qwen
-  params_b: 8.19
-  quant: awq
-  weights_gb: 6.10
-  layers: 36
-  kv_heads: 8
-  head_dim: 128
-  t4: ok
-  note: "Thinking / non-thinking switch."
+  apertus-8b:
+    rank: 5
+    hf_id: swiss-ai/Apertus-8B-Instruct-2509
+    revision: b946d40447b2b597999b9c86d44bee0b452c919f
+    family: Apertus
+    developer: Swiss AI Initiative, EPFL / ETH Zurich (CH)
+    params: 8053338176
+    layers: 32
+    kv_heads: 8
+    head_dim: 128
+    ctx: 65536
+    license: apache-2.0
+    trust_remote_code: false
 
-llama3.2-3b:
-  hf_id: casperhansen/llama-3.2-3b-instruct-awq
-  revision: 272b3bde867b606760447deb9a4d2719fbdfd3ae
-  chat_template_kwargs: {date_string: "26 Jul 2024"}   # template would insert today's date
-  family: llama
-  params_b: 3.21
-  quant: awq
-  weights_gb: 2.25
-  layers: 28
-  kv_heads: 8
-  head_dim: 128
-  t4: ok
-  note: "AWQ by the AutoAWQ author, not gated (the meta-llama fp16 repo needs an HF token)."
+  exaone3.5-7.8b:
+    rank: 6
+    hf_id: LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct
+    revision: 553ea250b9a5317231459279d5847d6cf955b9aa
+    family: EXAONE
+    developer: LG AI Research (KR)
+    params: 7818448896
+    layers: 32
+    kv_heads: 8
+    head_dim: 128
+    ctx: 32768
+    license: exaone (non-commercial research)
+    trust_remote_code: true
 
-llama3.1-8b:
-  hf_id: hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4
-  revision: db1f81ad4b8c7e39777509fac66c652eb0a52f91
-  chat_template_kwargs: {date_string: "26 Jul 2024"}   # template would insert today's date
-  family: llama
-  params_b: 8.03
-  quant: awq
-  weights_gb: 5.73
-  layers: 32
-  kv_heads: 8
-  head_dim: 128
-  t4: proven
-  note: "DUS solver B."
+  granite3.3-8b:
+    rank: 7
+    hf_id: ibm-granite/granite-3.3-8b-instruct
+    revision: 51dd4bc2ade4059a6bd87649d68aa11e4fb2529b
+    family: Granite
+    developer: IBM (US)
+    params: 8170864640
+    layers: 40
+    kv_heads: 8
+    head_dim: 128
+    ctx: 131072
+    license: apache-2.0
+    trust_remote_code: false
 
-mistral-7b:
-  hf_id: solidrust/Mistral-7B-Instruct-v0.3-AWQ
-  revision: 95b1295ddd1a8673117cdc7bd2a4da2a457bb3f7
-  family: mistral
-  params_b: 7.25
-  quant: awq
-  weights_gb: 4.16
-  layers: 32
-  kv_heads: 8
-  head_dim: 128
-  t4: proven
-  note: "DUS critic. No small Mistral runs on T4 (Ministral-3 is FP8 + multimodal)."
+  internlm3-8b:
+    rank: 8
+    hf_id: internlm/internlm3-8b-instruct
+    revision: 28c99415adaf61767bd1c619f4f99f308fdfd223
+    family: InternLM
+    developer: Shanghai AI Laboratory (CN)
+    params: 8804241408
+    layers: 48
+    kv_heads: 2
+    head_dim: 128
+    ctx: 32768
+    license: apache-2.0
+    trust_remote_code: true
 
-phi-4-mini:
-  hf_id: microsoft/Phi-4-mini-instruct
-  revision: cfbefacb99257ffa30c83adab238a50856ac3083
-  family: phi
-  params_b: 3.84
-  quant: fp16
-  weights_gb: 7.67
-  layers: 32
-  kv_heads: 8
-  head_dim: 128
-  t4: ok
-  note: "Trained in bf16, served in fp16 on T4: check outputs in the smoke run."
+  salamandra-7b:
+    rank: 9
+    hf_id: BSC-LT/salamandra-7b-instruct
+    revision: a3ed5452fafb3698a0423b1a18bfb5888f4e611b
+    family: Salamandra
+    developer: Barcelona Supercomputing Center (ES)
+    params: 7768117248
+    layers: 32
+    kv_heads: 8
+    head_dim: 128
+    ctx: 8192
+    license: apache-2.0
+    trust_remote_code: false
 
-phi-4:
-  hf_id: stelterlab/phi-4-AWQ
-  revision: 075b93fe5ab0d2e86004a5d68c7575ec3bb5a88b
-  family: phi
-  params_b: 14.7
-  quant: awq
-  weights_gb: 9.14
-  layers: 40
-  kv_heads: 10
-  head_dim: 128
-  t4: proven
-  note: "DUS verifier. Slow on one T4 (~4 GB KV); fine for small jobs such as message generation."
+  glm4-9b:
+    rank: 10
+    hf_id: zai-org/GLM-4-9B-0414
+    revision: 645b8482494e31b6b752272bf7f7f273ef0f3caf
+    family: GLM
+    developer: Zhipu AI / Z.ai (CN)
+    params: 9400279040
+    layers: 40
+    kv_heads: 2
+    head_dim: 128
+    ctx: 32768
+    license: mit
+    trust_remote_code: false
 
-falcon3-3b:
-  hf_id: tiiuae/Falcon3-3B-Instruct-AWQ
-  revision: ff2b2c500a7727b851c13f670ff4ddfbb6165e1f
-  family: falcon
-  params_b: 3.23
-  quant: awq
-  weights_gb: 2.87
-  layers: 22
-  kv_heads: 4
-  head_dim: 256
-  t4: ok
-  note: "Llama architecture, official AWQ."
+  falcon3-7b:
+    rank: 11
+    hf_id: tiiuae/Falcon3-7B-Instruct
+    revision: 1e57a0ecd176c7c139f289c60a74e57f887c3dfb
+    family: Falcon
+    developer: Technology Innovation Institute (AE)
+    params: 7455550464
+    layers: 28
+    kv_heads: 4
+    head_dim: 256
+    ctx: 32768
+    license: falcon-llm (TII Falcon License 2.0)
+    trust_remote_code: false
 
-falcon3-7b:
-  hf_id: tiiuae/Falcon3-7B-Instruct-AWQ
-  revision: 8595edabf2653b8302cbe8ac29a85b686fd857b4
-  family: falcon
-  params_b: 7.46
-  quant: awq
-  weights_gb: 5.07
-  layers: 28
-  kv_heads: 4
-  head_dim: 256
-  t4: ok
-  note: "Llama architecture, official AWQ."
+  kanana1.5-8b:
+    rank: 12
+    hf_id: kakaocorp/kanana-1.5-8b-instruct-2505
+    revision: c963a5f4f6496c749f94064a20b33028b0db9f19
+    family: Kanana
+    developer: Kakao (KR)
+    params: 8030285824
+    layers: 32
+    kv_heads: 8
+    head_dim: 128
+    ctx: 32768
+    license: apache-2.0
+    trust_remote_code: false
 
-granite3.3-2b:
-  hf_id: ibm-granite/granite-3.3-2b-instruct
-  revision: 707f574c62054322f6b5b04b6d075f0a8f05e0f0
-  family: granite
-  params_b: 2.53
-  quant: fp16
-  weights_gb: 5.07
-  layers: 40
-  kv_heads: 8
-  head_dim: 64
-  t4: ok
-  note: "bf16-trained, fp16 on T4."
+# Not selected, kept as replacements if a selected model fails the smoke test on T4.
+reserves:
+  marin-8b:
+    hf_id: marin-community/marin-8b-instruct
+    revision: 0378f9c932bd64ca189d2f2ca5bd2fb076cba61d
+    family: Marin
+    developer: Stanford CRFM / Marin community (US)
+    params: 8030261248
+    layers: 32
+    kv_heads: 8
+    head_dim: 128
+    ctx: 4096
+    license: apache-2.0
+    trust_remote_code: false
+    note: "Context 4096: enough for the sparse 12-agent setup only."
+  yi1.5-9b:
+    hf_id: 01-ai/Yi-1.5-9B-Chat
+    revision: 1a0fc698cf883c4f5c325f026ca79f0ebd9955a5
+    family: Yi
+    developer: 01.AI (CN)
+    params: 8829407232
+    layers: 48
+    kv_heads: 4
+    head_dim: 128
+    ctx: 4096
+    license: apache-2.0
+    trust_remote_code: false
+    note: "Context 4096: enough for the sparse 12-agent setup only."
+  tri-7b:
+    hf_id: trillionlabs/Tri-7B
+    revision: 94e2cc881102428ab9be3df2366a09ac928c2c82
+    family: Tri
+    developer: Trillion Labs (KR)
+    params: 7526944768
+    layers: 32
+    kv_heads: 32
+    head_dim: 128
+    ctx: 32768
+    license: apache-2.0
+    trust_remote_code: false
+  hunyuan-7b:
+    hf_id: tencent/Hunyuan-7B-Instruct
+    revision: 6fd6ecb05e76589bc43b79f49e3619445c6b4593
+    family: Hunyuan
+    developer: Tencent (CN)
+    params: 7504568320
+    layers: 32
+    kv_heads: 8
+    head_dim: 128
+    ctx: 32768
+    license: tencent-hunyuan
+    trust_remote_code: false
+    note: "Hybrid fast/slow thinking: check it answers without a long reasoning trace."
 
-granite3.3-8b:
-  hf_id: drawais/Granite-3.3-8B-Instruct-AWQ-INT4
-  revision: b8e10f889dc1ae7bf649da03342484ae548a4e43
-  family: granite
-  params_b: 8.17
-  quant: awq
-  weights_gb: 4.51
-  layers: 40
-  kv_heads: 8
-  head_dim: 128
-  t4: risky
-  note: "Community AWQ (213 downloads): validate accuracy against the fp16 model before use."
-
-# Not usable on Kaggle T4 (kept here so the reason is written down):
-#   Gemma-2 / Gemma-3   vLLM refuses fp16 ("numerical instability"), T4 has no bf16, fp32 does not fit
-#   Ministral-3 (2512)  FP8 weights + vision tower; FP8 needs compute >= 8.9
-#   OLMo-2-7B           no GQA: 512 KB/token KV cache and 14.6 GB fp16 weights
+# Excluded (plans/chon_agent_khac_ho.md): gated repos (meta-llama official -> Unsloth re-upload used,
+# Gemma, Cohere Command R7B / Aya, EuroLLM-9B); Gemma also refused by vLLM in fp16; Phi (no supported
+# 7-9B model); Ministral-8B (same family as Mistral); DeepSeek-LLM-7B (2023, context 4096);
+# Nemotron-Nano-9B-v2, MiniCPM4.1-8B (reasoning models); Teuken-7B (context 4096).

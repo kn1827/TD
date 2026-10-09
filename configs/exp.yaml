@@ -1,0 +1,54 @@
+# Heterogeneous Society-of-Mind debates (Choi et al. 2025 implementation), every agent a different family
+# (configs/models.yaml: 7-9B, no access request needed). Small-model variant: configs/exp_slm.yaml.
+#   python -m hmad.run --config configs/exp.yaml                 (GPU machine with vLLM)
+#   python -m hmad.run --config configs/exp.yaml --fake          (no GPU: fake answers, for testing)
+
+run_name: hetero1
+results_dir: results
+models_file: configs/models.yaml
+seed: 0
+
+# Tasks and items (loaders ported from Choi et al.: same shuffling, first `n_items` questions).
+tasks:
+  gsm8k: {n_items: 100}
+  csqa: {n_items: 100}
+
+# Rounds after round 0. 4 = round 0 + 4 debate rounds (plans/nghien_cuu_giao_thuc_debate.md, 5.3).
+rounds: 4
+
+# Setups. `models` = keys of configs/models.yaml; each debate assigns them to positions with a
+# seeded random permutation (position matters: hub of `centralized`, neighbours of `sparse`).
+setups:
+  main:                       # 6 agents, 6 families (top 6 by downloads)
+    models: [qwen2.5-7b, llama3.1-8b, mistral-7b, olmo3-7b, apertus-8b, exaone3.5-7.8b]
+    graphs: [decentralized, sparse, centralized]
+  extended:                   # 12 agents, 12 families, ring (sparse)
+    models: [qwen2.5-7b, llama3.1-8b, mistral-7b, olmo3-7b, apertus-8b, exaone3.5-7.8b,
+             granite3.3-8b, internlm3-8b, salamandra-7b, glm4-9b, falcon3-7b, kanana1.5-8b]
+    graphs: [sparse]
+  baseline:                   # 3 agents, 3 families (top 3)
+    models: [qwen2.5-7b, llama3.1-8b, mistral-7b]
+    graphs: [decentralized]
+
+# Sampling of Choi et al. (src/model/model_utils.py): HF generate with do_sample, temperature 1.0,
+# top_p 0.9, max_new_tokens 512. HF generate also applies the model's generation_config.json for
+# the values not passed (top_k, repetition_penalty; top_k defaults to 50): `hf_generate_defaults`
+# reproduces that per model. The prompt is raw text, without chat template (original behaviour).
+sampling:
+  temperature: 1.0
+  top_p: 0.9
+  max_tokens: 512
+  hf_generate_defaults: true
+  chat_template: false
+
+# Inference (vLLM offline engine, one subprocess per model and round).
+engine:
+  gpus: [0, 1]                  # Kaggle T4 x2
+  tensor_parallel_size: 2       # a 7-9B model in fp16 (14.5-18.8 GB) needs both T4s: one model at a time
+  dtype: half                   # T4 has no bfloat16
+  max_model_len: 8192
+  gpu_memory_utilization: 0.90
+  enforce_eager: true           # skip CUDA-graph capture: faster start, 60 starts per run
+  model_cache_dir: .cache/models
+  disk_budget_gb: 60            # downloaded weights kept at most (12 models: ~190 GB); LRU deleted
+  model_search_paths: []        # folders holding local copies (e.g. /kaggle/input), searched first

@@ -1,0 +1,18 @@
+# Small-model variant (2-5B, configs/models_slm.yaml): ~7 h instead of ~11-12 h; every model fits one
+# T4, so the two GPUs run two models at the same time. Same debates, same Choi et al. protocol.
+extends: configs/exp.yaml
+run_name: hetero_slm1
+models_file: configs/models_slm.yaml
+setups:
+  main:
+    models: [qwen3-4b, llama3.2-3b, phi4-mini, granite3.3-2b, exaone3.5-2.4b, sarashina2.2-3b]
+    graphs: [decentralized, sparse, centralized]
+  extended:
+    models: [qwen3-4b, llama3.2-3b, phi4-mini, granite3.3-2b, exaone3.5-2.4b, sarashina2.2-3b,
+             afm-4.5b, falcon3-3b, salamandra-2b, kanana1.5-2.1b, glm-edge-4b, danube3-4b]
+    graphs: [sparse]
+  baseline:
+    models: [qwen3-4b, llama3.2-3b, phi4-mini]
+    graphs: [decentralized]
+engine:
+  tensor_parallel_size: 1

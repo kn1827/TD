@@ -1,0 +1,250 @@
+# Small language models (SLM) for heterogeneous debates: every agent of a debate is a different family.
+#
+# Selection rules (plans/chon_agent_khac_ho.md):
+#   1. a different developer AND an independent pre-training (no fine-tune / distillation of another
+#      family in the list);
+#   2. instruct, non-reasoning model of 2-5B parameters, run in float16 (T4 has no bfloat16; no FP8);
+#   3. NOT gated: downloadable without requesting access (no HF token needed);
+#   4. architecture supported by vLLM, standard attention, context >= 8192 tokens, safetensors weights;
+#   5. rank = Hugging Face downloads over the last 30 days of the model's official repo (09/10/2026);
+#      setups take the top 3 / top 6 / all 12 (configs/exp.yaml).
+# Facts below were read from the Hugging Face API on 09/10/2026 (revision = commit pinned that day).
+#
+# Fields: hf_id, revision, family/developer, params (safetensors metadata), layers, kv_heads,
+# head_dim (KV-cache size), ctx (max_position_embeddings), license, trust_remote_code.
+
+models:
+  qwen3-4b:
+    rank: 1
+    hf_id: Qwen/Qwen3-4B-Instruct-2507
+    revision: cdbee75f17c01a7cc42f958dc650907174af0554
+    family: Qwen
+    developer: Alibaba Cloud (CN)
+    params: 4022468096
+    layers: 36
+    kv_heads: 8
+    head_dim: 128
+    ctx: 262144
+    license: apache-2.0
+    trust_remote_code: false
+    note: "Non-thinking variant of Qwen3-4B (July 2025)."
+
+  llama3.2-3b:
+    rank: 2
+    hf_id: unsloth/Llama-3.2-3B-Instruct
+    revision: 006f5dcd1393c3add266de40994ba96225e9689d
+    family: Llama
+    developer: Meta (US)
+    params: 3212749824
+    layers: 28
+    kv_heads: 8
+    head_dim: 128
+    ctx: 131072
+    license: llama3.2
+    trust_remote_code: false
+    note: "Ungated re-upload by Unsloth of meta-llama/Llama-3.2-3B-Instruct (gated; same parameter count,
+      redistribution allowed by the Llama 3.2 licence). Rank from the official repo's downloads (1.53M)."
+
+  phi4-mini:
+    rank: 3
+    hf_id: microsoft/Phi-4-mini-instruct
+    revision: cfbefacb99257ffa30c83adab238a50856ac3083
+    family: Phi
+    developer: Microsoft (US)
+    params: 3836021760
+    layers: 32
+    kv_heads: 8
+    head_dim: 128
+    ctx: 131072
+    license: mit
+    trust_remote_code: false
+
+  granite3.3-2b:
+    rank: 4
+    hf_id: ibm-granite/granite-3.3-2b-instruct
+    revision: 707f574c62054322f6b5b04b6d075f0a8f05e0f0
+    family: Granite
+    developer: IBM (US)
+    params: 2533539840
+    layers: 40
+    kv_heads: 8
+    head_dim: 64
+    ctx: 131072
+    license: apache-2.0
+    trust_remote_code: false
+
+  exaone3.5-2.4b:
+    rank: 5
+    hf_id: LGAI-EXAONE/EXAONE-3.5-2.4B-Instruct
+    revision: ccce25bd39c141fe053e0bc75818a8f5fe962802
+    family: EXAONE
+    developer: LG AI Research (KR)
+    params: 2405327360
+    layers: 30
+    kv_heads: 8
+    head_dim: 80
+    ctx: 32768
+    license: exaone (non-commercial research)
+    trust_remote_code: true
+
+  sarashina2.2-3b:
+    rank: 6
+    hf_id: sbintuitions/sarashina2.2-3b-instruct-v0.1
+    revision: 4f3626fb1b64b3e97c908e67f27b2d627ba2a999
+    family: Sarashina
+    developer: SB Intuitions / SoftBank (JP)
+    params: 3355609600
+    layers: 32
+    kv_heads: 8
+    head_dim: 160
+    ctx: 8192
+    license: mit
+    trust_remote_code: false
+
+  afm-4.5b:
+    rank: 7
+    hf_id: arcee-ai/AFM-4.5B
+    revision: e84d19711eca5817c1608cb344d931bf05c966dd
+    family: AFM
+    developer: Arcee AI (US)
+    params: 4619189760
+    layers: 36
+    kv_heads: 4
+    head_dim: 128
+    ctx: 65536
+    license: apache-2.0
+    trust_remote_code: false
+
+  falcon3-3b:
+    rank: 8
+    hf_id: tiiuae/Falcon3-3B-Instruct
+    revision: 411bb94318f94f7a5735b77109f456b1e74b42a1
+    family: Falcon
+    developer: Technology Innovation Institute (AE)
+    params: 3227655168
+    layers: 22
+    kv_heads: 4
+    head_dim: 256
+    ctx: 32768
+    license: falcon-llm (TII Falcon License 2.0)
+    trust_remote_code: false
+
+  salamandra-2b:
+    rank: 9
+    hf_id: BSC-LT/salamandra-2b-instruct
+    revision: 66b2be1e98fca5764696c1538f240a78f4b15433
+    family: Salamandra
+    developer: Barcelona Supercomputing Center (ES)
+    params: 2253490176
+    layers: 24
+    kv_heads: 16
+    head_dim: 128
+    ctx: 8192
+    license: apache-2.0
+    trust_remote_code: false
+
+  kanana1.5-2.1b:
+    rank: 10
+    hf_id: kakaocorp/kanana-1.5-2.1b-instruct-2505
+    revision: 7df4bc35ccd610e451809d7106e1c3cf82bfd44c
+    family: Kanana
+    developer: Kakao (KR)
+    params: 2316824832
+    layers: 32
+    kv_heads: 8
+    head_dim: 128
+    ctx: 32768
+    license: apache-2.0
+    trust_remote_code: false
+
+  glm-edge-4b:
+    rank: 11
+    hf_id: zai-org/glm-edge-4b-chat
+    revision: a1817f2ab339ecdd8497c4d752ea71a65299f29a
+    family: GLM
+    developer: Zhipu AI / Z.ai (CN)
+    params: 4327984128
+    layers: 40
+    kv_heads: 6
+    head_dim: 128
+    ctx: 8192
+    license: glm-4 (research use free)
+    trust_remote_code: false
+
+  danube3-4b:
+    rank: 12
+    hf_id: h2oai/h2o-danube3-4b-chat
+    revision: 1e5c6fa6620f8bf078958069ab4581cd88e0202c
+    family: Danube
+    developer: H2O.ai (US)
+    params: 3961839360
+    layers: 24
+    kv_heads: 8
+    head_dim: 120
+    ctx: 8192
+    license: apache-2.0
+    trust_remote_code: false
+
+# Not selected, kept as replacements if a selected model fails the smoke test on T4.
+reserves:
+  smollm2-1.7b:
+    hf_id: HuggingFaceTB/SmolLM2-1.7B-Instruct
+    revision: 31b70e2e869a7173562077fd711b654946d38674
+    family: SmolLM
+    developer: Hugging Face (US/FR)
+    params: 1711376384
+    layers: 24
+    kv_heads: 32
+    head_dim: 64
+    ctx: 8192
+    license: apache-2.0
+    trust_remote_code: false
+    note: "1.7B: below the 2B floor."
+  internlm2.5-1.8b:
+    hf_id: internlm/internlm2_5-1_8b-chat
+    revision: 57dcbc5455bf050d27a80f0ebd7808387caa714d
+    family: InternLM
+    developer: Shanghai AI Laboratory (CN)
+    params: 1889110016
+    layers: 24
+    kv_heads: 8
+    head_dim: 128
+    ctx: 32768
+    license: internlm (research free)
+    trust_remote_code: true
+    note: "1.8B: below the 2B floor."
+  lfm2-2.6b:
+    hf_id: LiquidAI/LFM2-2.6B
+    revision: 36ed799f7024ef169ba92ffe184821835e15cc66
+    family: LFM
+    developer: Liquid AI (US)
+    params: 2569272320
+    layers: 30
+    kv_heads: 8
+    head_dim: 64
+    ctx: 128000
+    license: lfm1.0
+    trust_remote_code: false
+    note: "Hybrid convolution + attention: check it runs on T4."
+  hunyuan-4b:
+    hf_id: tencent/Hunyuan-4B-Instruct
+    revision: 167d1128f3f49ab2b644afe494428526309f12cb
+    family: Hunyuan
+    developer: Tencent (CN)
+    params: 4221757440
+    layers: 36
+    kv_heads: 8
+    head_dim: 128
+    ctx: 262144
+    license: tencent-hunyuan
+    trust_remote_code: false
+    note: "Hybrid fast/slow thinking: check it answers without a long reasoning trace."
+
+# Considered and excluded (plans/chon_agent_khac_ho.md):
+#   gated (need an access request): meta-llama/* (official repo; the Unsloth re-upload is used instead),
+#     google/gemma-* (also: vLLM refuses Gemma 3 in fp16), CohereLabs/*, naver-hyperclovax/*.
+#   Mistral: Ministral-3-3B ships FP8 weights (T4 cannot run FP8); no other ungated Mistral model <= 5B.
+#   MiniCPM3-4B: only pytorch_model.bin (pickle) + remote code.  SmolLM3-3B: hybrid reasoning.
+#   Context 4096 (too short for 6 agents reading 5 peers): OLMo-2-1B, Nemotron-Mini-4B, StableLM-2-1.6B,
+#     Instella-3B, EuroLLM-1.7B, llm-jp-3-3.7B, Zamba2-2.7B.
+#   Qwen2.5-3B: same family as Qwen3-4B.  Granite-4.0-micro: same family as Granite 3.3.

@@ -4,3 +4,7 @@ __pycache__/
 *.pyc
 .venv/
 .env
+# reference repository cloned for reading (Choi et al. 2025); the parts we use are ported in hmad/choi.py
+debate-or-vote/
+# downloaded model weights
+.cache/

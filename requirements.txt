@@ -1,7 +1,8 @@
-# Core (stages S1-S5 and analysis). On Kaggle also: pip install vllm (it pins its own torch).
-requests>=2.31
+# Core (CPU is enough for planning, tests and --fake runs)
 pyyaml>=6.0
 numpy>=1.26
-# Only for scripts/prepare_data.py without the `datasets` package (parquet reader):
 pandas>=2.0
-pyarrow>=14
+datasets>=2.18          # task loaders of Choi et al. (openai/gsm8k, tau/commonsense_qa)
+huggingface_hub>=0.24   # model downloads at pinned revisions
+pytest>=8.0
+# GPU machines (Linux, CUDA, compute capability >= 7.5) also need:  pip install vllm
