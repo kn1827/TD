@@ -65,7 +65,7 @@ Thư mục này chỉ chứa phần riêng của Kaggle. Code lõi (`hmad/`, `co
 |---|---|
 | 1 | Đọc secrets (nếu có); `git clone` rồi `git checkout COMMIT`; đặt `TD_DEADLINE_TS` = giờ bắt đầu + 11,3 giờ |
 | 2 | Chép `results/` của phiên trước (nếu đã thêm Input) vào `/kaggle/working/results` |
-| 3 | Cài vLLM và `requirements.txt`; in phiên bản Python, vLLM, số GPU và dung lượng đĩa |
+| 3 | `bash kaggle/setup.sh {VLLM_VERSION}`: cài vLLM, gỡ `torchaudio` (Kaggle dựng sẵn cho CUDA khác với torch của vLLM), cài `requirements.txt`, in phiên bản và kiểm tra torch tính được trên GPU |
 | 4 | Test trên CPU: so code với bản gốc của Choi et al. (clone `debate-or-vote` @82c929e); chạy giả trọn quy trình |
 | 5 | `bash kaggle/kaggle_run.sh smoke|main` |
 | 6 | In `summary.md` |
@@ -80,7 +80,8 @@ Thư mục này chỉ chứa phần riêng của Kaggle. Code lõi (`hmad/`, `co
 
 | Hiện tượng | Xử lý |
 |---|---|
-| `pip install vllm` lỗi, hoặc không nhận GPU | Đặt `VLLM_VERSION` bằng một bản cũ hơn rồi chạy lại |
+| `PyTorch and TorchAudio were compiled with different CUDA versions` | Đã xử lý trong `kaggle/setup.sh` (gỡ torchaudio). Notebook cũ: thay ô cài đặt bằng `!bash kaggle/setup.sh {VLLM_VERSION}` |
+| `setup.sh` báo torch không dùng được GPU, hoặc `pip install vllm` lỗi | Driver của Kaggle quá cũ so với bản CUDA của torch: đặt `VLLM_VERSION` bằng một bản vLLM cũ hơn, dựng trên CUDA 12.x, rồi chạy lại |
 | Một mô hình báo lỗi `dtype` / NaN / chữ vô nghĩa | Mô hình đó không chạy ổn ở fp16 trên T4. Đổi sang mô hình dự phòng |
 | Hết đĩa khi tải mô hình | Giảm `disk_budget_gb`, hoặc dùng Kaggle Dataset chứa mô hình (mục dưới) |
 | Notebook dừng giữa chừng không có mã 3 | Xem `results/<run>/logs/`; chạy lại, bước nào đã xong sẽ được bỏ qua |
@@ -88,6 +89,6 @@ Thư mục này chỉ chứa phần riêng của Kaggle. Code lõi (`hmad/`, `co
 
 ## Giảm thời gian tải mô hình (tùy chọn)
 
-12 mô hình fp16 nặng khoảng 190 GB, nhiều hơn đĩa của phiên, nên phải tải lại giữa các vòng: khoảng 48 lần, 770 GB, phần lớn chạy song song với lúc sinh.
+12 mô hình fp16 nặng khoảng 190 GB. Ở smoke test ngày 09/10/2026, `/tmp` của phiên Kaggle trống 1.059 GB và tải được khoảng 230 MB/giây, nên cả 12 mô hình nằm vừa bộ đệm: mỗi phiên chỉ tải mỗi mô hình một lần (khoảng 14 phút). Mục này chỉ cần khi đĩa của phiên nhỏ hơn.
 
 Cách tránh: tạo **Kaggle Dataset** cho từng mô hình (thư mục mang tên repo, ví dụ `Qwen2.5-7B-Instruct/`, có `config.json`, đúng revision ghi trong `configs/models.yaml`), rồi thêm làm Input. `hmad` dùng bản trong `/kaggle/input` trước khi tải.
