@@ -21,7 +21,8 @@ import time
 from pathlib import Path
 
 ALLOW = ["*.json", "*.safetensors", "*.model", "*.txt", "*.py", "*.tiktoken", "tokenizer*", "*.jinja"]
-IGNORE = ["original/*", "*.pth", "*.gguf", "*.bin", "*.pt"]
+# consolidated*.safetensors: Mistral repos also ship their native-format copy of the weights (2x size)
+IGNORE = ["original/*", "*.pth", "*.gguf", "*.bin", "*.pt", "consolidated*"]
 
 
 def dir_size(p: Path) -> int:

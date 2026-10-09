@@ -164,6 +164,8 @@ def main():
     t0 = time.time()
     if spec.get("fake"):
         eff = effective_sampling(spec.get("model_path") or "", spec["sampling"])
+        if spec["model_key"] in os.environ.get("HMAD_FAKE_FAIL", "").split(","):   # tests
+            raise RuntimeError(f"fake failure of {spec['model_key']} (HMAD_FAKE_FAIL)")
         rows, info = fake_generate(jobs, float(spec.get("fake_skill", 0.7))), {"fake": True}
     else:
         eff = effective_sampling(spec["model_path"], spec["sampling"])

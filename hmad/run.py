@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -140,13 +141,43 @@ def start_worker(phase: Phase, spec: dict, gpus: list | None):
     return subprocess.Popen(cmd, cwd=str(ROOT), stdout=log, stderr=subprocess.STDOUT, env=env), log
 
 
-def finish_worker(phase: Phase, proc, log) -> None:
+def error_lines(log_path: Path, k: int = 6) -> list:
+    """The last k distinct lines of a log that look like errors (the real cause of a vLLM failure
+    is often far above the final traceback)."""
+    lines = log_path.read_text(encoding="utf-8", errors="replace").splitlines()
+    hits = [ln.strip() for ln in lines if re.search(r"(Error|error:|Exception|not supported|failed)", ln)]
+    out = []
+    for ln in reversed(hits):
+        if ln not in out:
+            out.append(ln)
+        if len(out) == k:
+            break
+    return out[::-1]
+
+
+def finish_worker(phase: Phase, proc, log, keep_going: bool = False) -> str | None:
+    """Wait for a worker. On failure: raise, or with keep_going (smoke tests) write empty outputs
+    marked finish_reason='worker_error' so the other models' debates go on, and return the error."""
     rc = proc.wait()
     log.close()
-    if rc != 0 or not phase.done():
+    if rc == 0 and phase.done():
+        return None
+    errs = error_lines(phase.log)
+    if not keep_going:
         tail = phase.log.read_text(encoding="utf-8", errors="replace").splitlines()[-30:]
         raise RuntimeError(f"worker for {phase.model} round {phase.r} failed (exit {rc}); "
-                           f"log {phase.log}:\n" + "\n".join(tail))
+                           f"log {phase.log}:\n" + "\n".join(tail)
+                           + "\n--- error lines:\n" + "\n".join(errs))
+    jobs = read_jsonl(phase.jobs)
+    phase.out.write_text("".join(json.dumps({"id": j["id"], "text": "", "finish_reason": "worker_error",
+                                             "prompt_tokens": None, "completion_tokens": 0}) + "\n"
+                                 for j in jobs), encoding="utf-8")
+    phase.meta.write_text(json.dumps({"model_key": phase.model, "n": len(jobs), "failed": True,
+                                      "exit_code": rc, "errors": errs, "seconds": 0.0}, indent=1),
+                          encoding="utf-8")
+    print(f"[run] round {phase.r} / {phase.model}: FAILED (exit {rc}), continuing:\n  "
+          + "\n  ".join(errs), flush=True)
+    return "; ".join(errs[-2:])
 
 
 def git_commit() -> str | None:
@@ -236,7 +267,7 @@ def main():
                     if not Phase(rd, rr, mm).done():
                         store.prefetch(mm, protect=set(todo))
         for phase, proc, log in running:
-            finish_worker(phase, proc, log)
+            finish_worker(phase, proc, log, keep_going=bool(eng.get("continue_on_error", False)))
         longest = max(longest, time.time() - t0)
         print(f"[run] round {r} / {todo}: done in {time.time() - t0:.0f}s", flush=True)
 
@@ -253,11 +284,19 @@ def main():
             "models": {m: {"hf_id": registry[m]["hf_id"], "revision": registry[m].get("revision"),
                            "family": registry[m]["family"],
                            "source": metas[f"r0/{m}"].get("model_source"),
+                           "failed_phases": [k for k, v in metas.items() if k.endswith("/" + m) and v.get("failed")],
                            "sampling_effective": metas[f"r0/{m}"].get("sampling_effective"),
                            "vllm_version": metas[f"r0/{m}"].get("vllm_version")} for m in order}}
     recs = assemble(debates, outputs_all, R, registry, cfg.get("seed", 0), prov)
     write(rd / "debates.jsonl", recs)
-    (rd / "summary.md").write_text(summary(recs, R), encoding="utf-8")
+    failed = {k: v for k, v in metas.items() if v.get("failed")}
+    text = summary(recs, R)
+    if failed:
+        text += "\n## Failed phases (model did not run; its turns are empty)\n\n"
+        text += "\n".join(f"- {k}: " + " | ".join(v.get("errors") or ["?"])
+                          for k, v in sorted(failed.items()))
+        text += "\n"
+    (rd / "summary.md").write_text(text, encoding="utf-8")
     print(f"[run] {len(recs)} debates -> {rd / 'debates.jsonl'}; summary in {rd / 'summary.md'}")
 
 

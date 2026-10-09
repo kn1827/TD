@@ -103,6 +103,24 @@ def test_registry_not_gated_and_schedule():
     assert steps == [(0, ["a", "b"]), (0, ["c"]), (1, ["c"]), (1, ["a", "b"])]
 
 
+def test_continue_on_error():
+    import os
+    with tempfile.TemporaryDirectory() as t:
+        tmp = Path(t)
+        cfg = _cfg(tmp, engine={"continue_on_error": True})
+        env = dict(os.environ, HMAD_FAKE_FAIL="mistral-7b")
+        p = subprocess.run([sys.executable, "-m", "hmad.run", "--config", str(cfg), "--fake"],
+                           cwd=str(ROOT), capture_output=True, text=True, env=env)
+        assert p.returncode == 0, p.stdout + p.stderr
+        summ = (tmp / "test_fake" / "summary.md").read_text(encoding="utf-8")
+        assert "Failed phases" in summ and "mistral-7b" in summ and "fake failure" in summ
+    with tempfile.TemporaryDirectory() as t:
+        env = dict(os.environ, HMAD_FAKE_FAIL="mistral-7b")
+        p = subprocess.run([sys.executable, "-m", "hmad.run", "--config", str(_cfg(Path(t))), "--fake"],
+                           cwd=str(ROOT), capture_output=True, text=True, env=env)
+        assert p.returncode != 0 and "error lines" in p.stderr
+
+
 def test_core_does_not_depend_on_kaggle():
     for folder in ("hmad", "scripts"):
         for f in (ROOT / folder).rglob("*.py"):
