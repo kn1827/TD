@@ -34,10 +34,12 @@ for d in ${MODEL_CACHE:-} /tmp/models /root/hmad_models /kaggle/tmp/models; do
   echo "[kaggle] $d is not writable ($ERR), trying the next folder"
 done
 [[ -z "$CACHE" ]] && { echo "[kaggle] no writable folder for model weights"; exit 1; }
-# Budget capped (default 70 GB = 4 models of 7-9B): above that, least-recently-used models are
+# Budget capped (default 40 GB = 2 models of 7-9B: the running one + the prefetched next one). A session
+# has a hidden disk quota (~120 GB incl. the ~30 GB of packages): past it the disk turns read-only.
+# Above the budget, least-recently-used models are
 # deleted and downloaded again later (~1 min each). Override with CACHE_GB=... if the quota is known.
 FREE_GB=$(df -BG --output=avail "$CACHE" | tail -n 1 | tr -dc '0-9')
-CAP=${CACHE_GB:-70}
+CAP=${CACHE_GB:-40}
 BUDGET=$(( FREE_GB - 10 < CAP ? FREE_GB - 10 : CAP ))
 CFG=/kaggle/working/kaggle_${MODE}.yaml
 cat > "$CFG" <<EOF

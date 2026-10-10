@@ -50,5 +50,5 @@ engine:
   gpu_memory_utilization: 0.90
   enforce_eager: true           # skip CUDA-graph capture: faster start, 60 starts per run
   model_cache_dir: .cache/models
-  disk_budget_gb: 60            # downloaded weights kept at most (12 models: ~190 GB); LRU deleted
+  disk_budget_gb: 40            # downloaded weights kept at most (12 models: ~190 GB); LRU deleted
   model_search_paths: []        # folders holding local copies (e.g. /kaggle/input), searched first
