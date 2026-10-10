@@ -27,11 +27,11 @@ mkdir -p /kaggle/working/results
 CACHE=""
 for d in ${MODEL_CACHE:-} /tmp/models /root/hmad_models /kaggle/tmp/models; do
   [[ -z "$d" ]] && continue
-  if mkdir -p "$d" 2>/dev/null && dd if=/dev/zero of="$d/.write_test" bs=1M count=256 status=none 2>/dev/null; then
+  if ERR=$( { mkdir -p "$d" && dd if=/dev/zero of="$d/.write_test" bs=1M count=256 status=none; } 2>&1 ); then
     rm -f "$d/.write_test"; CACHE=$d; break
   fi
   rm -f "$d/.write_test" 2>/dev/null || true
-  echo "[kaggle] $d is not writable, trying the next folder"
+  echo "[kaggle] $d is not writable ($ERR), trying the next folder"
 done
 [[ -z "$CACHE" ]] && { echo "[kaggle] no writable folder for model weights"; exit 1; }
 # Budget capped (default 70 GB = 4 models of 7-9B): above that, least-recently-used models are
