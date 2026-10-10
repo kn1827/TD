@@ -43,7 +43,7 @@ def build_plan(cfg: dict, registry: dict, items: dict | None = None) -> list:
         if missing:
             raise KeyError(f"setup {setup}: models not in the registry: {missing}")
         fams = [registry[m]["family"] for m in sc["models"]]
-        if len(set(fams)) != len(fams):
+        if cfg.get("unique_families", True) and len(set(fams)) != len(fams):
             raise ValueError(f"setup {setup}: two agents of the same family: {fams}")
         for graph in sc["graphs"]:
             if graph not in choi.GRAPHS:

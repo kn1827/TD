@@ -45,7 +45,10 @@ def test_plan_assignment():
     assert len(debates) == 2 * 100 * 3 + 2 * 100 + 2 * 100
     for d in debates:
         fams = [reg[m]["family"] for m in d.models]
-        assert len(set(fams)) == len(fams) == d.n          # every agent a different family
+        if d.setup in ("main", "baseline"):
+            assert len(set(fams)) == len(fams) == d.n      # different families
+        else:
+            assert d.n == 12 and len(set(fams)) == 8       # 8 families, 4 doubled
     hubs = Counter(d.models[0] for d in debates if d.graph == "centralized")
     assert len(hubs) == 6 and min(hubs.values()) >= 15    # each model is the hub about 1/6 of the time
 
@@ -55,6 +58,7 @@ def test_same_family_refused():
     reg = load_models(cfg)
     reg["fake-qwen"] = dict(reg["qwen2.5-7b"], key="fake-qwen")
     cfg["setups"] = {"bad": {"models": ["qwen2.5-7b", "fake-qwen"], "graphs": ["decentralized"]}}
+    cfg["unique_families"] = True
     try:
         build_plan(cfg, reg, {t: ([""], [0]) for t in cfg["tasks"]})
     except ValueError:
@@ -91,11 +95,11 @@ def test_fake_run_and_resume():
 
 
 def test_registry_not_gated_and_schedule():
-    for name in ("exp.yaml", "exp_slm.yaml", "smoke.yaml"):
+    for name, n in (("exp.yaml", 8), ("exp_slm.yaml", 12), ("smoke.yaml", 8)):
         cfg = load_config(ROOT / "configs" / name)
         reg = load_models(cfg)
         used = {m for s in cfg["setups"].values() for m in s["models"]}
-        assert len(used) == 12 and len({reg[m]["family"] for m in used}) == 12, name
+        assert len(used) == n and len({reg[m]["family"] for m in used}) == n, name
         assert all(not reg[m].get("gated") for m in used), name
     assert gpu_groups({"gpus": [0, 1], "tensor_parallel_size": 1}) == [[0], [1]]
     assert gpu_groups({"gpus": [0, 1], "tensor_parallel_size": 2}) == [[0, 1]]

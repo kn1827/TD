@@ -3,15 +3,15 @@
 Ý tưởng 1 của đề án: thu dữ liệu debate để nghiên cứu đáp án đúng/sai lây giữa các agent (`PLAN.md`).
 
 - **Kiến trúc debate:** Society of Mind **theo cài đặt của Choi, Zhu & Li (NeurIPS 2025, "Debate or Vote")**, chuyển nguyên văn sang `hmad/choi.py` từ repo chính thức (MIT, commit 82c929e). `tests/test_choi_fidelity.py` chạy hàm gốc và hàm đã chuyển trên cùng đầu vào, kết quả phải giống hệt. Lý do chọn: `plans/nghien_cuu_giao_thuc_debate.md`.
-- **Agent:** mỗi agent trong một debate là **một họ mô hình khác nhau**. Có 12 họ, cỡ 7–9B, chạy fp16, **không cần xin quyền tải** (`configs/models.yaml`). Phương án mô hình nhỏ 2–5B để dự phòng: `configs/exp_slm.yaml`. Cách chọn và các con số tính toán: `plans/chon_agent_khac_ho.md`.
+- **Agent:** 8 họ mô hình instruct 7–9B đã chạy được trên Kaggle T4 (smoke test 10/10/2026): Qwen, Llama, Mistral, EXAONE, Granite, InternLM, Falcon, Kanana. Tất cả fp16, không cần xin quyền tải, prompt thô đúng như Choi. Thiết lập 3 và 6 agent dùng các họ khác nhau; thiết lập 12 agent nhân đôi 4 họ dùng nhiều nhất. Chi tiết: `plans/chon_agent_khac_ho.md`.
 
-| Thiết lập | Số agent (= số họ) | Đồ thị (của Choi et al.) |
+| Thiết lập | Số agent | Đồ thị (của Choi et al.) |
 |---|---|---|
 | main | 6 | decentralized (đầy đủ), sparse (vòng tròn), centralized (sao) |
 | extended | 12 | sparse |
 | baseline | 3 | decentralized |
 
-Mỗi bộ câu hỏi (GSM8K, CommonsenseQA) có 100 câu. Mỗi debate có vòng 0 + 4 vòng. Tổng cộng 1.000 debate và 33.000 lượt sinh, ước tính 10–19 giờ trên Kaggle T4 × 2, tức 2–3 phiên.
+Mỗi bộ câu hỏi (GSM8K, CommonsenseQA) có 100 câu. Mỗi debate có vòng 0 + 4 vòng. Tổng cộng 1.000 debate và 33.000 lượt sinh, ước tính khoảng 9–18 giờ trên Kaggle T4 × 2, tức 1–2 phiên.
 
 ## Chạy
 

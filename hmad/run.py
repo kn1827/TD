@@ -252,7 +252,8 @@ def main():
                                   encoding="utf-8")
             spec = {"model_key": m, "jobs": str(phase.jobs), "out": str(phase.out),
                     "meta": str(phase.meta), "engine": eng, "sampling": cfg["sampling"],
-                    "trust_remote_code": bool(registry[m].get("trust_remote_code", False))}
+                    "trust_remote_code": bool(registry[m].get("trust_remote_code", False)),
+                    "ctx": registry[m].get("ctx")}
             if args.fake:
                 spec.update(fake=True, fake_skill=0.9 - 0.03 * registry[m].get("rank", 10),
                             model_path=None, model_source="fake")

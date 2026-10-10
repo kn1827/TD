@@ -18,7 +18,8 @@ MODE=${1:-smoke}
 case "$MODE" in
   smoke) BASE=configs/smoke.yaml ;;
   main)  BASE=configs/exp.yaml ;;
-  *) echo "usage: bash kaggle/kaggle_run.sh {smoke|main}"; exit 1 ;;
+  *.yaml) BASE=$MODE ;;                       # any config of the repo, e.g. configs/smoke2.yaml
+  *) echo "usage: bash kaggle/kaggle_run.sh {smoke|main|configs/<file>.yaml}"; exit 1 ;;
 esac
 
 mkdir -p /kaggle/working/results
@@ -41,7 +42,7 @@ done
 FREE_GB=$(df -BG --output=avail "$CACHE" | tail -n 1 | tr -dc '0-9')
 CAP=${CACHE_GB:-40}
 BUDGET=$(( FREE_GB - 10 < CAP ? FREE_GB - 10 : CAP ))
-CFG=/kaggle/working/kaggle_${MODE}.yaml
+CFG=/kaggle/working/kaggle_$(basename "${MODE%.yaml}").yaml
 cat > "$CFG" <<EOF
 extends: $BASE
 results_dir: /kaggle/working/results

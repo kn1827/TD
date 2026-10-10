@@ -1,5 +1,7 @@
-# Heterogeneous Society-of-Mind debates (Choi et al. 2025 implementation), every agent a different family
-# (configs/models.yaml: 7-9B, no access request needed). Small-model variant: configs/exp_slm.yaml.
+# Heterogeneous Society-of-Mind debates (Choi et al. 2025 implementation, unchanged: raw prompts, no
+# chat template). Agents are drawn from the 8 instruct families that ran on Kaggle T4 in smoke test 1
+# (10/10/2026): Qwen, Llama, Mistral, EXAONE, Granite, InternLM, Falcon, Kanana (configs/models.yaml).
+# Families may repeat when a setup needs more agents than 8: the most used families are doubled.
 #   python -m hmad.run --config configs/exp.yaml                 (GPU machine with vLLM)
 #   python -m hmad.run --config configs/exp.yaml --fake          (no GPU: fake answers, for testing)
 
@@ -7,6 +9,7 @@ run_name: hetero1
 results_dir: results
 models_file: configs/models.yaml
 seed: 0
+unique_families: false        # 12 agents > 8 working families: repeats allowed (decision 10/10/2026)
 
 # Tasks and items (loaders ported from Choi et al.: same shuffling, first `n_items` questions).
 tasks:
@@ -19,14 +22,14 @@ rounds: 4
 # Setups. `models` = keys of configs/models.yaml; each debate assigns them to positions with a
 # seeded random permutation (position matters: hub of `centralized`, neighbours of `sparse`).
 setups:
-  main:                       # 6 agents, 6 families (top 6 by downloads)
-    models: [qwen2.5-7b, llama3.1-8b, mistral-7b, olmo3-7b, apertus-8b, exaone3.5-7.8b]
+  main:                       # 6 agents, 6 different families (top 6 working, by downloads)
+    models: [qwen2.5-7b, llama3.1-8b, mistral-7b, exaone3.5-7.8b, granite3.3-8b, internlm3-8b]
     graphs: [decentralized, sparse, centralized]
-  extended:                   # 12 agents, 12 families, ring (sparse)
-    models: [qwen2.5-7b, llama3.1-8b, mistral-7b, olmo3-7b, apertus-8b, exaone3.5-7.8b,
-             granite3.3-8b, internlm3-8b, salamandra-7b, glm4-9b, falcon3-7b, kanana1.5-8b]
+  extended:                   # 12 agents: the 8 families + a 2nd agent of the 4 most used, ring (sparse)
+    models: [qwen2.5-7b, llama3.1-8b, mistral-7b, exaone3.5-7.8b, granite3.3-8b, internlm3-8b,
+             falcon3-7b, kanana1.5-8b, qwen2.5-7b, llama3.1-8b, mistral-7b, exaone3.5-7.8b]
     graphs: [sparse]
-  baseline:                   # 3 agents, 3 families (top 3)
+  baseline:                   # 3 agents, 3 different families (top 3)
     models: [qwen2.5-7b, llama3.1-8b, mistral-7b]
     graphs: [decentralized]
 

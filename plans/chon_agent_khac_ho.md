@@ -1,4 +1,41 @@
-# Chọn agent khác họ mô hình (7–9B, không cần xin quyền): tiêu chí, danh sách, tính toán
+# Chọn agent: kết quả smoke test và danh sách chốt
+
+## Chốt ngày 10/10/2026, sau smoke test 1 trên Kaggle (thay cho các mục bên dưới)
+
+**Kết quả smoke test 1** (vLLM 0.31, 2 × T4, fp16, không chat template như Choi; 8 câu, 2 vòng):
+
+| Mô hình | Chạy được? | Đọc được đáp án (CSQA / GSM8K) | Chạm giới hạn 512 token (CSQA / GSM8K) |
+|---|---|---|---|
+| Qwen2.5-7B | có | 88% / 100% | 12% / 12% |
+| Llama-3.1-8B | có | 88% / 100% | 88% / 100% |
+| Mistral-7B-v0.3 | có | 75% / 75% | 12% / 38% |
+| EXAONE-3.5-7.8B | có | 75% / 38% | 0% / 12% |
+| Granite-3.3-8B | có | 100% / 88% | 0% / 38% |
+| InternLM3-8B | có | 100% / 75% | 100% / 88% |
+| Falcon3-7B | có | 62% / 88% | 0% / 0% |
+| Kanana-1.5-8B | có | 100% / 75% | 100% / 100% |
+| Salamandra-7B | chạy nhưng gần như không đọc được đáp án | 38% / 12% | 100% / 100% |
+| OLMo-3-7B, GLM-4-9B | **không**: vLLM không khởi tạo được cấu hình mô hình | — | — |
+| Apertus-8B | **không**: hàm kích hoạt xIELU giữ float32, lệch với fp16 | — | — |
+
+**Quyết định của người làm đề tài:**
+- Chỉ dùng **8 họ đã chạy được**: Qwen, Llama, Mistral, EXAONE, Granite, InternLM, Falcon, Kanana. Tất cả là bản instruct.
+- **Giữ đúng Choi**: prompt thô, không chat template.
+- **Cho phép trùng họ** khi thiết lập cần nhiều agent hơn số họ (`unique_families: false`):
+
+| Thiết lập | Agent |
+|---|---|
+| baseline (3) | Qwen, Llama, Mistral: khác họ |
+| main (6) | Qwen, Llama, Mistral, EXAONE, Granite, InternLM: khác họ |
+| extended (12) | 8 họ + thêm một agent nữa cho 4 họ dùng nhiều nhất (Qwen, Llama, Mistral, EXAONE) |
+
+**Chấp nhận như một đặc điểm của cách làm theo Choi:** Llama, InternLM và Kanana thường viết tiếp quá đáp án tới giới hạn 512 token, và bộ đọc đáp án lấy cặp `{…}` cuối cùng. Cần ghi rõ điều này trong báo cáo, và kiểm tra lại tỉ lệ đọc được đáp án trên dữ liệu thật.
+
+**Ước tính:** 1.000 debate, 33.000 lượt sinh, 40 lần nạp mô hình. Khoảng 8,6–9,2 giờ phiên với tốc độ giả định; nếu chậm gấp đôi thì khoảng 2 phiên.
+
+---
+
+## (Trước smoke test) Chọn agent khác họ mô hình (7–9B, không cần xin quyền): tiêu chí, danh sách, tính toán
 
 Viết ngày 09/10/2026, chốt theo yêu cầu "7–8B vẫn được, miễn là miễn phí và không phải xin quyền; chạy nhiều ngày cũng được".
 - Áp dụng: kiến trúc SoM theo cài đặt của Choi et al. (lựa chọn A).

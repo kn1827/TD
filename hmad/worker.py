@@ -108,22 +108,27 @@ def vllm_generate(spec: dict, jobs: list, eff: dict) -> tuple:
     from vllm import LLM, SamplingParams
     eng = spec["engine"]
     t0 = time.time()
+    # the model's own context when shorter than the engine setting (e.g. 4096 for Marin, Yi)
+    max_len = min(int(eng.get("max_model_len", 8192)), int(spec.get("ctx") or 10 ** 9))
     kw = dict(model=spec["model_path"], tokenizer=spec["model_path"], dtype=eng.get("dtype", "half"),
               tensor_parallel_size=int(eng.get("tensor_parallel_size", 1)),
-              max_model_len=int(eng.get("max_model_len", 8192)),
+              max_model_len=max_len,
               gpu_memory_utilization=float(eng.get("gpu_memory_utilization", 0.9)),
               enforce_eager=bool(eng.get("enforce_eager", True)),
               trust_remote_code=bool(spec.get("trust_remote_code", False)), seed=0)
     llm = LLM(**kw)
     load_s = time.time() - t0
     tok = llm.get_tokenizer()
-    limit = int(eng.get("max_model_len", 8192)) - eff["max_tokens"]
+    limit = max_len - eff["max_tokens"]
     use_template = bool(spec["sampling"].get("chat_template", False))
     inputs, keep, too_long = [], [], 0
     for j in jobs:
         if use_template:
-            ids = tok.apply_chat_template([{"role": "user", "content": j["prompt"]}], tokenize=True,
-                                          add_generation_prompt=True)
+            # text first, then tokens without extra special tokens: the template already holds BOS,
+            # and apply_chat_template(tokenize=True) returns a dict in recent transformers versions
+            text = tok.apply_chat_template([{"role": "user", "content": j["prompt"]}], tokenize=False,
+                                           add_generation_prompt=True)
+            ids = tok(text, add_special_tokens=False).input_ids
         else:
             ids = tok(j["prompt"]).input_ids        # BOS added as in HF tokenizer(...) (Choi et al.)
         if len(ids) > limit:
