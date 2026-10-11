@@ -1,11 +1,13 @@
-# Heterogeneous Society-of-Mind debates (Choi et al. 2025 implementation, unchanged: raw prompts, no
-# chat template). Agents are drawn from the 8 instruct families that ran on Kaggle T4 in smoke test 1
-# (10/10/2026): Qwen, Llama, Mistral, EXAONE, Granite, InternLM, Falcon, Kanana (configs/models.yaml).
+# Heterogeneous Society-of-Mind debates, adapted from Choi et al. 2025: same prompts, graphs, parser
+# and vote, but each model gets its own chat template (Choi et al. use raw text; see `sampling`).
+# Agents are drawn from the 8 instruct families that ran on Kaggle T4 in smoke test 1 (10/10/2026):
+# Qwen, Llama, Mistral, EXAONE, Granite, InternLM, Falcon, Kanana (configs/models.yaml).
 # Families may repeat when a setup needs more agents than 8: the most used families are doubled.
 #   python -m hmad.run --config configs/exp.yaml                 (GPU machine with vLLM)
 #   python -m hmad.run --config configs/exp.yaml --fake          (no GPU: fake answers, for testing)
 
-run_name: hetero1
+# hetero1 (10/10/2026) = same protocol without chat template, stopped after round 2.
+run_name: hetero2
 results_dir: results
 models_file: configs/models.yaml
 seed: 0
@@ -36,13 +38,17 @@ setups:
 # Sampling of Choi et al. (src/model/model_utils.py): HF generate with do_sample, temperature 1.0,
 # top_p 0.9, max_new_tokens 512. HF generate also applies the model's generation_config.json for
 # the values not passed (top_k, repetition_penalty; top_k defaults to 50): `hf_generate_defaults`
-# reproduces that per model. The prompt is raw text, without chat template (original behaviour).
+# reproduces that per model.
+# chat_template: the prompt is wrapped as one user turn in the model's own chat template (deviation
+# from Choi et al., decision 11/10/2026). Without it (hetero1, rounds 0-2) the instruct models did not
+# know where their turn ends: 34-51% of generations ran to the 512-token limit, 6% were empty (EOS as
+# first token), and the readable-answer rate fell under 90% for 5 of 8 models.
 sampling:
   temperature: 1.0
   top_p: 0.9
   max_tokens: 512
   hf_generate_defaults: true
-  chat_template: false
+  chat_template: true
 
 # Inference (vLLM offline engine, one subprocess per model and round).
 engine:

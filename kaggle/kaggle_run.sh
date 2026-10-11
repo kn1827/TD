@@ -9,8 +9,10 @@
 #   * model weights are cached in /tmp/models (NOT under /kaggle/working, whose 20 GB are for outputs),
 #     with a disk budget = free space on /tmp minus 10 GB;
 #   * local copies of models attached as notebook inputs (/kaggle/input/...) are used before downloading;
-#   * TD_DEADLINE_TS (set by the notebook) makes the run stop before the 12-hour limit; exit code 3 =
-#     stopped early, rerun in a new session with this session's output attached as input.
+#   * results are zipped into /kaggle/working/results.zip every ZIP_EVERY_MIN minutes (default 30) while
+#     the run goes, and once more at the end, so the output always holds a recent single-file copy;
+#   * optional: TD_DEADLINE_TS (unix time) stops the run before that time with exit code 3 (the
+#     notebook does not set it); rerun with RESUME = True and the output attached as input.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -56,11 +58,33 @@ df -h "$CACHE" /kaggle/working | cat
 mount | grep -E " on (/|/tmp|/kaggle/working) " | cat || true
 nvidia-smi --query-gpu=index,name,memory.total --format=csv
 
+# results/ -> results.zip, written aside then renamed: a copy taken while a phase is writing is still
+# safe to resume from (a phase counts as done only when its meta.json is complete).
+zip_results() {
+  python - <<'EOF' || echo "[kaggle] zip failed"
+import os, zipfile
+base, out = "/kaggle/working", "/kaggle/working/results.zip"
+with zipfile.ZipFile(out + ".tmp", "w", zipfile.ZIP_DEFLATED) as z:
+    for d, _, files in os.walk(os.path.join(base, "results")):
+        for f in files:
+            try:
+                z.write(os.path.join(d, f), os.path.relpath(os.path.join(d, f), base))
+            except FileNotFoundError:      # a .tmp file renamed while zipping
+                pass
+os.replace(out + ".tmp", out)
+print(f"[kaggle] results zipped: {out} ({os.path.getsize(out) / 1e6:.0f} MB)", flush=True)
+EOF
+}
+( while sleep $(( ${ZIP_EVERY_MIN:-30} * 60 )); do zip_results; done ) &
+ZIPPER=$!
+
 set +e
 python -m hmad.run --config "$CFG"
 RC=$?
 set -e
+kill "$ZIPPER" 2>/dev/null || true
+zip_results
 if [[ $RC -eq 3 ]]; then
-  echo "[kaggle] stopped before the session limit: save this version, then rerun with its output as input"
+  echo "[kaggle] stopped before TD_DEADLINE_TS: save this version, then rerun with RESUME = True"
 fi
 exit $RC

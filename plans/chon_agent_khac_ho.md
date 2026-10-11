@@ -1,5 +1,19 @@
 # Chọn agent: kết quả smoke test và danh sách chốt
 
+## Cập nhật 11/10/2026: bật chat template (thay cho mục "Giữ đúng Choi" bên dưới)
+
+**Quyết định:** mục tiêu là dùng mô hình debate của Choi làm khung, được điều chỉnh khi cần, không phải chép lại y nguyên. Từ run `hetero2`, prompt của mỗi lượt được bọc thành một lượt `user` trong chat template riêng của từng mô hình (`sampling.chat_template: true`). Prompt, đồ thị, cách đọc đáp án và cách bỏ phiếu giữ nguyên như Choi.
+
+**Lý do** (số liệu từ run `hetero1`: prompt thô, 1.000 debate, đã chạy r0–r2 rồi dừng):
+- Mô hình instruct học cách kết thúc lượt nói qua chat template. Không có template, chúng viết tiếp sau đáp án: 34% lượt sinh chạy tới giới hạn 512 token ở r0, 46% ở r1, 51% ở r2 (Kanana 100%, Llama 87–95%, InternLM 60–95%). Phần viết tiếp gồm `{final answer}` lặp lại, câu hỏi mới do mô hình tự đặt, hoặc bài toán khác; bộ đọc đáp án lấy cặp `{…}` cuối cùng nên có thể đọc nhầm.
+- Khoảng 6% câu trả lời ở r1–r2 rỗng (mô hình kết thúc ngay ở token đầu): EXAONE khoảng 25%, Falcon khoảng 40%. Ở r2, 13% prompt chứa ít nhất một ý kiến rỗng của agent khác.
+- Tỉ lệ đọc được đáp án dưới ngưỡng 90% đặt ra trước đó (bảng rủi ro bên dưới) với 5/8 mô hình. Ví dụ, ở GSM8K r0: EXAONE 74%, Mistral 63%.
+- Choi et al. nhận xét "không dùng chat template tốt hơn" khi chỉ thử Qwen và Llama. Với Qwen, dữ liệu của mình cũng thấy prompt thô vẫn ổn (2–5% chạm 512 token ở r0), nhưng nhận xét này không đúng với các họ còn lại.
+
+**Tiền lệ:** Du et al. (2023), bài gốc của Society of Mind debate, gọi API chat của OpenAI, tức là luôn có chat template.
+
+**Giữ nguyên:** 512 token, cách đọc đáp án của Choi, không sinh lại câu trả lời rỗng. Sẽ xem lại sau khi có số liệu của `hetero2`.
+
 ## Chốt ngày 10/10/2026, sau smoke test 1 trên Kaggle (thay cho các mục bên dưới)
 
 **Kết quả smoke test 1** (vLLM 0.31, 2 × T4, fp16, không chat template như Choi; 8 câu, 2 vòng):

@@ -10,7 +10,8 @@ meta.json; hmad.run treats a phase as done only when meta.json exists with n == 
 Sampling follows Choi et al. (HF `generate`, do_sample): temperature and top_p from the config;
 with `hf_generate_defaults`, top_k and repetition_penalty come from the model's
 generation_config.json as HF generate would take them (top_k 50 and repetition_penalty 1.0 when
-absent). Prompts are raw text unless `chat_template` is true (Choi et al. use raw text).
+absent). Prompts are raw text unless `chat_template` is true (Choi et al. use raw text); with it,
+the prompt is one user turn in the model's own template and meta.json keeps the first rendered prompt.
 """
 
 from __future__ import annotations
@@ -121,13 +122,14 @@ def vllm_generate(spec: dict, jobs: list, eff: dict) -> tuple:
     tok = llm.get_tokenizer()
     limit = max_len - eff["max_tokens"]
     use_template = bool(spec["sampling"].get("chat_template", False))
-    inputs, keep, too_long = [], [], 0
+    inputs, keep, too_long, example = [], [], 0, None
     for j in jobs:
         if use_template:
             # text first, then tokens without extra special tokens: the template already holds BOS,
             # and apply_chat_template(tokenize=True) returns a dict in recent transformers versions
             text = tok.apply_chat_template([{"role": "user", "content": j["prompt"]}], tokenize=False,
                                            add_generation_prompt=True)
+            example = example or text          # kept in meta.json to check the template by eye
             ids = tok(text, add_special_tokens=False).input_ids
         else:
             ids = tok(j["prompt"]).input_ids        # BOS added as in HF tokenizer(...) (Choi et al.)
@@ -150,7 +152,8 @@ def vllm_generate(spec: dict, jobs: list, eff: dict) -> tuple:
     rows = [res.get(j["id"]) or {"id": j["id"], "text": "", "finish_reason": "prompt_too_long",
                                  "prompt_tokens": None, "completion_tokens": 0} for j in jobs]
     info = {"load_seconds": round(load_s, 1), "generate_seconds": round(gen_s, 1),
-            "too_long": too_long, "vllm_version": vllm.__version__, "engine_args": kw}
+            "too_long": too_long, "vllm_version": vllm.__version__, "engine_args": kw,
+            "chat_template_example": example}
     try:
         import torch
         info["torch_version"] = torch.__version__

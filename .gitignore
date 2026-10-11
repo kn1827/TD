@@ -8,3 +8,5 @@ __pycache__/
 debate-or-vote/
 # downloaded model weights
 .cache/
+# result archives downloaded from Kaggle (res.zip, results.zip)
+*.zip

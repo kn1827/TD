@@ -31,44 +31,44 @@ Thư mục này chỉ chứa phần riêng của Kaggle. Code lõi (`hmad/`, `co
    ```python
    REPO_URL = "https://github.com/kn1827/TD.git"
    COMMIT = "<mã commit ở bước A.2>"
-   MODE = "smoke"
-   VLLM_VERSION = ""
+   VLLM_VERSION = "0.31.0"
+   RESUME = False
    ```
 
-## C. Phiên 1: smoke test (khoảng 1–1,5 giờ)
+## C. Smoke test (tùy chọn, khoảng 1–1,5 giờ)
 
-1. Bấm **Save Version → Save & Run All (Commit)**. Chạy kiểu này thì notebook chạy nền tới 12 giờ, không cần mở trình duyệt. Chạy tương tác thì Kaggle sẽ ngắt khi bạn rời trang.
-2. Chạy xong, mở version đó → **Output** → `results/smoke1/summary.md`. Kiểm tra từng mô hình:
-   - **readable answer ≥ 90%**: mô hình ghi đáp án đúng dạng `{final answer: …}`;
-   - **hit 512-token limit** thấp;
-   - **round-0 accuracy** hợp lý: GSM8K khoảng 0,5–0,9, CSQA khoảng 0,6–0,8.
-3. **Nếu có mô hình hỏng** (lỗi trong log `results/smoke1/logs/r*_<model>.log`, hoặc đọc được đáp án dưới 90%): gửi mình `summary.md` và log. Mình sẽ đổi sang mô hình dự phòng trong `configs/models.yaml`, rồi bạn commit và push lại.
-4. Ghi phiên bản vLLM đã chạy được: in ở ô cài đặt, cũng có trong `results/smoke1/phases/r0/*.meta.json`. Điền vào `VLLM_VERSION` cho các phiên sau.
+Notebook chỉ chạy lần chính. Muốn thử nhanh 8 mô hình trước (4 + 4 câu, 2 vòng): ở ô chạy (ô 4 trong bảng cuối mục này) đổi `"main"` thành `"smoke"`, chạy, rồi mở **Output** → `results/smoke2/summary.md`. Kiểm tra từng mô hình:
+- **readable answer ≥ 90%**: mô hình ghi đáp án đúng dạng `{final answer: …}`;
+- **hit 512-token limit** thấp;
+- **round-0 accuracy** hợp lý: GSM8K khoảng 0,5–0,9, CSQA khoảng 0,6–0,8.
 
-## D. Phiên 2 trở đi: chạy chính (2–3 phiên, mỗi phiên tối đa 12 giờ)
+Mỗi `phases/r0/<model>.meta.json` có `chat_template_example`: prompt đầu tiên sau khi bọc chat template của mô hình đó, để kiểm tra bằng mắt. Test trên CPU: `python -m tests.test_pipeline`.
 
-1. Sửa ô đầu tiên: `MODE = "main"`, ghim `VLLM_VERSION`, và `COMMIT` nếu có commit mới.
-2. **Save & Run All (Commit).**
-3. Ở mốc 11,3 giờ, chương trình tự dừng nhận việc mới và thoát với mã 3. Kết quả đã xong nằm trong Output của version đó.
-4. **Chạy tiếp:**
-   - Edit notebook → **Add Input → Your Work → Notebook Output** → chọn chính notebook này (version vừa chạy).
-   - Rồi Save & Run All lần nữa.
-   - Ô thứ 2 sẽ chép `results/` cũ vào; bước nào đã xong không chạy lại.
-   - Lặp lại tới khi log in `[run] 1000 debates -> .../debates.jsonl`.
-5. **Kết quả cuối** nằm trong Output: `results/hetero1/debates.jsonl` và `summary.md`.
+## D. Chạy chính: run `hetero2`, đủ 4 vòng debate
 
-**Quota:** 30 giờ GPU mỗi tuần. Smoke test (1–1,5 giờ) cộng chạy chính (khoảng 10–19 giờ) nằm gọn trong một tuần. Thời gian còn lại xem ở thanh bên phải của Kaggle.
+1. Sửa ô đầu tiên: `COMMIT` (nếu có commit mới), `RESUME = False`.
+2. **Save Version → Save & Run All (Commit).** Chạy kiểu này thì notebook chạy nền, không cần mở trình duyệt. Notebook **không đặt giờ dừng**: chạy tới khi xong cả 5 vòng (r0 + 4 vòng debate).
+3. Trong lúc chạy, `results/` được nén thành `/kaggle/working/results.zip` mỗi 30 phút (đổi bằng biến môi trường `ZIP_EVERY_MIN`), và một lần nữa khi chạy xong. Tải một file này về là đủ.
+4. **Chạy tiếp** (khi phiên bị ngắt giữa chừng):
+   - Edit notebook → **Add Input → Your Work → Notebook Output** → chọn version vừa chạy. Hoặc tải `results.zip` lên thành một Kaggle Dataset rồi thêm làm Input.
+   - Đặt `RESUME = True`, rồi Save & Run All lần nữa.
+   - Ô thứ 2 chép `results/` (hoặc giải nén `.zip` có `results/` bên trong) vào `/kaggle/working`, in số phase đã xong. Phase nào đã xong không chạy lại.
+   - `RESUME = True` mà Input không có kết quả cũ thì notebook dừng báo lỗi, để không vô tình chạy lại từ đầu.
+5. **Kết quả cuối:** log in `[run] 1000 debates -> .../debates.jsonl`; Output có `results/hetero2/debates.jsonl`, `summary.md` và `results.zip`.
+
+**Thời gian:** hetero1 (không chat template, nhiều lượt chạy tới 512 token) mất khoảng 10 giờ cho 3 vòng r0–r2. Đủ 5 vòng có thể tới khoảng 20 giờ; có chat template thì câu trả lời ngắn hơn nên có thể nhanh hơn. **Quota:** 30 giờ GPU mỗi tuần, xem ở thanh bên phải của Kaggle.
+
+`TD_DEADLINE_TS` (giờ unix) vẫn dùng được nếu cần dừng chủ động trước một mốc: chương trình không bắt đầu phase nào dự kiến xong sau mốc đó, thoát với mã 3.
 
 ## Notebook làm gì
 
 | Ô | Việc |
 |---|---|
-| 1 | Đọc secrets (nếu có); `git clone` rồi `git checkout COMMIT`; đặt `TD_DEADLINE_TS` = giờ bắt đầu + 11,3 giờ |
-| 2 | Chép `results/` của phiên trước (nếu đã thêm Input) vào `/kaggle/working/results` |
+| 1 | Đọc secrets (nếu có); `git clone` rồi `git checkout COMMIT`; đặt `RESUME` |
+| 2 | Nếu `RESUME = True`: chép `results/` hoặc giải nén `.zip` của phiên trước (trong `/kaggle/input`) vào `/kaggle/working/results` |
 | 3 | `bash kaggle/setup.sh {VLLM_VERSION}`: cài vLLM, gỡ `torchaudio` (Kaggle dựng sẵn cho CUDA khác với torch của vLLM), cài `requirements.txt`, in phiên bản và kiểm tra torch tính được trên GPU |
-| 4 | Test trên CPU: so code với bản gốc của Choi et al. (clone `debate-or-vote` @82c929e); chạy giả trọn quy trình |
-| 5 | `bash kaggle/kaggle_run.sh smoke|main` |
-| 6 | In `summary.md` |
+| 4 | `bash kaggle/kaggle_run.sh main` (chạy `configs/exp.yaml`; nén `results.zip` mỗi 30 phút và khi xong) |
+| 5 | In `results/*/summary.md` |
 
 `kaggle_run.sh` tạo một config phụ kế thừa `configs/smoke.yaml` hoặc `configs/exp.yaml`, chỉ đổi phần riêng của Kaggle:
 - kết quả lưu ở `/kaggle/working/results`;

@@ -3,7 +3,7 @@
 Ý tưởng 1 của đề án: thu dữ liệu debate để nghiên cứu đáp án đúng/sai lây giữa các agent (`PLAN.md`).
 
 - **Kiến trúc debate:** Society of Mind **theo cài đặt của Choi, Zhu & Li (NeurIPS 2025, "Debate or Vote")**, chuyển nguyên văn sang `hmad/choi.py` từ repo chính thức (MIT, commit 82c929e). `tests/test_choi_fidelity.py` chạy hàm gốc và hàm đã chuyển trên cùng đầu vào, kết quả phải giống hệt. Lý do chọn: `plans/nghien_cuu_giao_thuc_debate.md`.
-- **Agent:** 8 họ mô hình instruct 7–9B đã chạy được trên Kaggle T4 (smoke test 10/10/2026): Qwen, Llama, Mistral, EXAONE, Granite, InternLM, Falcon, Kanana. Tất cả fp16, không cần xin quyền tải, prompt thô đúng như Choi. Thiết lập 3 và 6 agent dùng các họ khác nhau; thiết lập 12 agent nhân đôi 4 họ dùng nhiều nhất. Chi tiết: `plans/chon_agent_khac_ho.md`.
+- **Agent:** 8 họ mô hình instruct 7–9B đã chạy được trên Kaggle T4 (smoke test 10/10/2026): Qwen, Llama, Mistral, EXAONE, Granite, InternLM, Falcon, Kanana. Tất cả fp16, không cần xin quyền tải. Khác Choi một điểm: prompt được bọc trong chat template của từng mô hình (run `hetero2`). Run `hetero1` dùng prompt thô như Choi, dừng ở vòng 2: 34–51% lượt sinh chạy tới giới hạn 512 token và khoảng 6% câu trả lời rỗng. Thiết lập 3 và 6 agent dùng các họ khác nhau; thiết lập 12 agent nhân đôi 4 họ dùng nhiều nhất. Chi tiết: `plans/chon_agent_khac_ho.md`.
 
 | Thiết lập | Số agent | Đồ thị (của Choi et al.) |
 |---|---|---|
