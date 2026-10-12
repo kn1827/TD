@@ -9,10 +9,13 @@
 #   * model weights are cached in /tmp/models (NOT under /kaggle/working, whose 20 GB are for outputs),
 #     with a disk budget = free space on /tmp minus 10 GB;
 #   * local copies of models attached as notebook inputs (/kaggle/input/...) are used before downloading;
+#   * resume from the repository: run folders committed under results/ (results.zip of the previous
+#     session unzipped into results/ on the local machine, committed, pushed) are copied into
+#     /kaggle/working/results before the run, so phases already done are not run again;
 #   * results are zipped into /kaggle/working/results.zip every ZIP_EVERY_MIN minutes (default 30) while
 #     the run goes, and once more at the end, so the output always holds a recent single-file copy;
 #   * optional: TD_DEADLINE_TS (unix time) stops the run before that time with exit code 3 (the
-#     notebook does not set it); rerun with RESUME = True and the output attached as input.
+#     notebook does not set it); push the results and rerun to resume.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -25,6 +28,24 @@ case "$MODE" in
 esac
 
 mkdir -p /kaggle/working/results
+# Restore results/ of the repository. A file already in /kaggle/working/results is kept: it is at least
+# as recent (same session rerun, or restored from /kaggle/input by the notebook). Mixing the two copies is
+# safe because the files of a phase are rebuilt identically and a phase counts as done only with its meta.json.
+python - <<'EOF'
+import glob, os, shutil
+src, dst = "results", "/kaggle/working/results"
+added = 0
+for d, _, files in os.walk(src):
+    for f in files:
+        out = os.path.join(dst, os.path.relpath(os.path.join(d, f), src))
+        if not os.path.exists(out):
+            os.makedirs(os.path.dirname(out), exist_ok=True)
+            shutil.copy2(os.path.join(d, f), out)
+            added += 1
+print(f"[kaggle] {added} files restored from the repository's results/")
+for rd in sorted(glob.glob(dst + "/*/")):
+    print(f"[kaggle] {rd}: {len(glob.glob(rd + 'phases/r*/*.meta.json'))} phases done")
+EOF
 # Model cache: the first candidate where 256 MB can really be written (df on Kaggle's overlay shows
 # the whole host's free space, not the session's quota, and /tmp was once mounted read-only).
 CACHE=""
@@ -85,6 +106,6 @@ set -e
 kill "$ZIPPER" 2>/dev/null || true
 zip_results
 if [[ $RC -eq 3 ]]; then
-  echo "[kaggle] stopped before TD_DEADLINE_TS: save this version, then rerun with RESUME = True"
+  echo "[kaggle] stopped before TD_DEADLINE_TS: unzip results.zip into results/ of the repository, push, rerun"
 fi
 exit $RC

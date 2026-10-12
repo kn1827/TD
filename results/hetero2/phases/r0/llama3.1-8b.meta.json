@@ -1,0 +1,35 @@
+{
+ "model_key": "llama3.1-8b",
+ "model_path": "/tmp/models/llama3.1-8b",
+ "model_source": "hf:unsloth/Meta-Llama-3.1-8B-Instruct@a2856192dd7c25b842431f39c179a6c2c2f627d1",
+ "n": 1200,
+ "seconds": 467.6,
+ "sampling_effective": {
+  "temperature": 1.0,
+  "top_p": 0.9,
+  "max_tokens": 512,
+  "top_k": 50,
+  "repetition_penalty": 1.0
+ },
+ "load_seconds": 106.8,
+ "generate_seconds": 274.5,
+ "too_long": 0,
+ "vllm_version": "0.31.0",
+ "engine_args": {
+  "model": "/tmp/models/llama3.1-8b",
+  "tokenizer": "/tmp/models/llama3.1-8b",
+  "dtype": "half",
+  "tensor_parallel_size": 2,
+  "max_model_len": 8192,
+  "gpu_memory_utilization": 0.9,
+  "enforce_eager": true,
+  "trust_remote_code": false,
+  "seed": 0
+ },
+ "chat_template_example": "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nCutting Knowledge Date: December 2023\nToday Date: 26 Jul 2024\n\n<|eot_id|><|start_header_id|>user<|end_header_id|>\n\nFinley went to the grocery store and bought rice, beans, and pork for use in their home. It took her 20 more minutes to cook pork than rice, while beans took half the combined cooking time of pork and rice. If it took her 30 minutes to cook rice, how long in minutes did it take to cook all the food? Make sure to state your final answer in curly brackets at the very end of your response, just like: \"{final answer: 123}\".<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
+ "torch_version": "2.13.0+cu130",
+ "gpus": [
+  "Tesla T4",
+  "Tesla T4"
+ ]
+}

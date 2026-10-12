@@ -1,0 +1,33 @@
+{
+ "model_key": "granite3.3-8b",
+ "jobs": "/kaggle/working/results/hetero2/phases/r0/granite3.3-8b.jobs.jsonl",
+ "out": "/kaggle/working/results/hetero2/phases/r0/granite3.3-8b.out.jsonl",
+ "meta": "/kaggle/working/results/hetero2/phases/r0/granite3.3-8b.meta.json",
+ "engine": {
+  "gpus": [
+   0,
+   1
+  ],
+  "tensor_parallel_size": 2,
+  "dtype": "half",
+  "max_model_len": 8192,
+  "gpu_memory_utilization": 0.9,
+  "enforce_eager": true,
+  "model_cache_dir": "/tmp/models",
+  "disk_budget_gb": 40,
+  "model_search_paths": [
+   "/kaggle/input"
+  ]
+ },
+ "sampling": {
+  "temperature": 1.0,
+  "top_p": 0.9,
+  "max_tokens": 512,
+  "hf_generate_defaults": true,
+  "chat_template": true
+ },
+ "trust_remote_code": false,
+ "ctx": 131072,
+ "model_path": "/tmp/models/granite3.3-8b",
+ "model_source": "hf:ibm-granite/granite-3.3-8b-instruct@51dd4bc2ade4059a6bd87649d68aa11e4fb2529b"
+}

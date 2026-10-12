@@ -1,0 +1,35 @@
+{
+ "model_key": "kanana1.5-8b",
+ "model_path": "/tmp/models/kanana1.5-8b",
+ "model_source": "hf:kakaocorp/kanana-1.5-8b-instruct-2505@c963a5f4f6496c749f94064a20b33028b0db9f19",
+ "n": 200,
+ "seconds": 265.3,
+ "sampling_effective": {
+  "temperature": 1.0,
+  "top_p": 0.9,
+  "max_tokens": 512,
+  "top_k": 50,
+  "repetition_penalty": 1.0
+ },
+ "load_seconds": 90.9,
+ "generate_seconds": 154.0,
+ "too_long": 0,
+ "vllm_version": "0.31.0",
+ "engine_args": {
+  "model": "/tmp/models/kanana1.5-8b",
+  "tokenizer": "/tmp/models/kanana1.5-8b",
+  "dtype": "half",
+  "tensor_parallel_size": 2,
+  "max_model_len": 8192,
+  "gpu_memory_utilization": 0.9,
+  "enforce_eager": true,
+  "trust_remote_code": false,
+  "seed": 0
+ },
+ "chat_template_example": "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n\n<|eot_id|><|start_header_id|>user<|end_header_id|>\n\nThese are the recent opinions from other agents: \n\nOne of the agents' response: \nBased on the detailed breakdown provided by the agents, we can see that each step of the reasoning process has been verified through different notations and expressions. The core calculations remain consistent across all responses, confirming the correctness of the method used.\n\nLet's summarize the steps once more for clarity:\n\n1. **Cooking Time for Rice**: Given as \\( R = 30 \\) minutes.\n2. **Cooking Time for Pork**: Calculated as \\( P = R + 20 = 30 + 20 = 50 \\) minutes.\n3. **Cooking Time for Beans**: Determined as half the combined cooking time of pork and rice, which is \\( B = \\frac{P + R}{2} = \\frac{50 + 30}{2} = \\frac{80}{2} = 40 \\) minutes.\n4. **Total Cooking Time**: Summing up the cooking times for rice, pork, and beans, we get \\( R + P + B = 30 + 50 + 40 = 120 \\) minutes.\n\nThus, the total time it took Finley to cook all the food is confirmed to be:\n\n\\(\\boxed{120}\\)\n\n{final answer: 120}\n\n\nOne of the agents' response: \nBased on the information provided, let's summarize the cooking times for each food item:\n\n1. **Rice:** Finley took 30 minutes to cook rice.\n\n2. **Pork:** It took 20 more minutes to cook pork than rice. Therefore, the cooking time for pork is:\n   \\[\n   30 \\text{ minutes (rice)} + 20 \\text{ minutes} = 50 \\text{ minutes}\n   \\]\n\n3. **Beans:** The cooking time for beans is half the combined cooking time of pork and rice. First, calculate the combined cooking time of pork and rice:\n   \\[\n   30 \\text{ minutes (rice)} + 50 \\text{ minutes (pork)} = 80 \\text{ minutes}\n   \\]\n   Now, calculate the cooking time for beans:\n   \\[\n   \\frac{80 \\text{ minutes}}{2} = 40 \\text{ minutes}\n   \\]\n\nFinally, sum the cooking times for all three items:\n\\[\n30 \\text{ minutes (rice)} + 50 \\text{ minutes (pork)} + 40 \\text{ minutes (beans)} = 120 \\text{ minutes}\n\\]\n\nThus, the total time taken to cook all the food is 120 minutes.\n\n\\{final answer: 120\\}\n\n\nThis was your most recent opinion:\n{final answer: 120}\n\n\nUse these opinions carefully as additional advice to revise your recent opinion to give your final answer to the question:\nFinley went to the grocery store and bought rice, beans, and pork for use in their home. It took her 20 more minutes to cook pork than rice, while beans took half the combined cooking time of pork and rice. If it took her 30 minutes to cook rice, how long in minutes did it take to cook all the food? Make sure to state your final answer in curly brackets at the very end of your response, just like: \"{final answer: 123}\".<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
+ "torch_version": "2.13.0+cu130",
+ "gpus": [
+  "Tesla T4",
+  "Tesla T4"
+ ]
+}

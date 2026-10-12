@@ -1,0 +1,35 @@
+{
+ "model_key": "qwen2.5-7b",
+ "model_path": "/tmp/models/qwen2.5-7b",
+ "model_source": "hf:Qwen/Qwen2.5-7B-Instruct@a09a35458c702b33eeacc393d103063234e8bc28",
+ "n": 1200,
+ "seconds": 446.4,
+ "sampling_effective": {
+  "temperature": 1.0,
+  "top_p": 0.9,
+  "max_tokens": 512,
+  "top_k": 20,
+  "repetition_penalty": 1.05
+ },
+ "load_seconds": 107.9,
+ "generate_seconds": 232.7,
+ "too_long": 0,
+ "vllm_version": "0.31.0",
+ "engine_args": {
+  "model": "/tmp/models/qwen2.5-7b",
+  "tokenizer": "/tmp/models/qwen2.5-7b",
+  "dtype": "half",
+  "tensor_parallel_size": 2,
+  "max_model_len": 8192,
+  "gpu_memory_utilization": 0.9,
+  "enforce_eager": true,
+  "trust_remote_code": false,
+  "seed": 0
+ },
+ "chat_template_example": "<|im_start|>system\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\n<|im_start|>user\nFinley went to the grocery store and bought rice, beans, and pork for use in their home. It took her 20 more minutes to cook pork than rice, while beans took half the combined cooking time of pork and rice. If it took her 30 minutes to cook rice, how long in minutes did it take to cook all the food? Make sure to state your final answer in curly brackets at the very end of your response, just like: \"{final answer: 123}\".<|im_end|>\n<|im_start|>assistant\n",
+ "torch_version": "2.13.0+cu130",
+ "gpus": [
+  "Tesla T4",
+  "Tesla T4"
+ ]
+}

@@ -1,0 +1,33 @@
+{
+ "model_key": "llama3.1-8b",
+ "jobs": "/kaggle/working/results/hetero2/phases/r0/llama3.1-8b.jobs.jsonl",
+ "out": "/kaggle/working/results/hetero2/phases/r0/llama3.1-8b.out.jsonl",
+ "meta": "/kaggle/working/results/hetero2/phases/r0/llama3.1-8b.meta.json",
+ "engine": {
+  "gpus": [
+   0,
+   1
+  ],
+  "tensor_parallel_size": 2,
+  "dtype": "half",
+  "max_model_len": 8192,
+  "gpu_memory_utilization": 0.9,
+  "enforce_eager": true,
+  "model_cache_dir": "/tmp/models",
+  "disk_budget_gb": 40,
+  "model_search_paths": [
+   "/kaggle/input"
+  ]
+ },
+ "sampling": {
+  "temperature": 1.0,
+  "top_p": 0.9,
+  "max_tokens": 512,
+  "hf_generate_defaults": true,
+  "chat_template": true
+ },
+ "trust_remote_code": false,
+ "ctx": 131072,
+ "model_path": "/tmp/models/llama3.1-8b",
+ "model_source": "hf:unsloth/Meta-Llama-3.1-8B-Instruct@a2856192dd7c25b842431f39c179a6c2c2f627d1"
+}

@@ -1,0 +1,35 @@
+{
+ "model_key": "granite3.3-8b",
+ "model_path": "/tmp/models/granite3.3-8b",
+ "model_source": "hf:ibm-granite/granite-3.3-8b-instruct@51dd4bc2ade4059a6bd87649d68aa11e4fb2529b",
+ "n": 800,
+ "seconds": 566.0,
+ "sampling_effective": {
+  "temperature": 1.0,
+  "top_p": 0.9,
+  "max_tokens": 512,
+  "top_k": 50,
+  "repetition_penalty": 1.0
+ },
+ "load_seconds": 104.2,
+ "generate_seconds": 361.3,
+ "too_long": 0,
+ "vllm_version": "0.31.0",
+ "engine_args": {
+  "model": "/tmp/models/granite3.3-8b",
+  "tokenizer": "/tmp/models/granite3.3-8b",
+  "dtype": "half",
+  "tensor_parallel_size": 2,
+  "max_model_len": 8192,
+  "gpu_memory_utilization": 0.9,
+  "enforce_eager": true,
+  "trust_remote_code": false,
+  "seed": 0
+ },
+ "chat_template_example": "<|start_of_role|>system<|end_of_role|>Knowledge Cutoff Date: April 2024.\nToday's Date: October 11, 2026.\nYou are Granite, developed by IBM. You are a helpful AI assistant.<|end_of_text|>\n<|start_of_role|>user<|end_of_role|>Finley went to the grocery store and bought rice, beans, and pork for use in their home. It took her 20 more minutes to cook pork than rice, while beans took half the combined cooking time of pork and rice. If it took her 30 minutes to cook rice, how long in minutes did it take to cook all the food? Make sure to state your final answer in curly brackets at the very end of your response, just like: \"{final answer: 123}\".<|end_of_text|>\n<|start_of_role|>assistant<|end_of_role|>",
+ "torch_version": "2.13.0+cu130",
+ "gpus": [
+  "Tesla T4",
+  "Tesla T4"
+ ]
+}

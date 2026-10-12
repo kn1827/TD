@@ -1,0 +1,105 @@
+{
+ "rounds": 4,
+ "seed": 0,
+ "tasks": {
+  "gsm8k": {
+   "n_items": 100
+  },
+  "csqa": {
+   "n_items": 100
+  }
+ },
+ "setups": {
+  "main": {
+   "models": [
+    "qwen2.5-7b",
+    "llama3.1-8b",
+    "mistral-7b",
+    "exaone3.5-7.8b",
+    "granite3.3-8b",
+    "internlm3-8b"
+   ],
+   "graphs": [
+    "decentralized",
+    "sparse",
+    "centralized"
+   ]
+  },
+  "extended": {
+   "models": [
+    "qwen2.5-7b",
+    "llama3.1-8b",
+    "mistral-7b",
+    "exaone3.5-7.8b",
+    "granite3.3-8b",
+    "internlm3-8b",
+    "falcon3-7b",
+    "kanana1.5-8b",
+    "qwen2.5-7b",
+    "llama3.1-8b",
+    "mistral-7b",
+    "exaone3.5-7.8b"
+   ],
+   "graphs": [
+    "sparse"
+   ]
+  },
+  "baseline": {
+   "models": [
+    "qwen2.5-7b",
+    "llama3.1-8b",
+    "mistral-7b"
+   ],
+   "graphs": [
+    "decentralized"
+   ]
+  }
+ },
+ "sampling": {
+  "temperature": 1.0,
+  "top_p": 0.9,
+  "max_tokens": 512,
+  "hf_generate_defaults": true,
+  "chat_template": true
+ },
+ "engine": {
+  "tensor_parallel_size": 2,
+  "dtype": "half",
+  "max_model_len": 8192
+ },
+ "models": {
+  "exaone3.5-7.8b": {
+   "hf_id": "LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct",
+   "revision": "553ea250b9a5317231459279d5847d6cf955b9aa"
+  },
+  "falcon3-7b": {
+   "hf_id": "tiiuae/Falcon3-7B-Instruct",
+   "revision": "1e57a0ecd176c7c139f289c60a74e57f887c3dfb"
+  },
+  "granite3.3-8b": {
+   "hf_id": "ibm-granite/granite-3.3-8b-instruct",
+   "revision": "51dd4bc2ade4059a6bd87649d68aa11e4fb2529b"
+  },
+  "internlm3-8b": {
+   "hf_id": "internlm/internlm3-8b-instruct",
+   "revision": "28c99415adaf61767bd1c619f4f99f308fdfd223"
+  },
+  "kanana1.5-8b": {
+   "hf_id": "kakaocorp/kanana-1.5-8b-instruct-2505",
+   "revision": "c963a5f4f6496c749f94064a20b33028b0db9f19"
+  },
+  "llama3.1-8b": {
+   "hf_id": "unsloth/Meta-Llama-3.1-8B-Instruct",
+   "revision": "a2856192dd7c25b842431f39c179a6c2c2f627d1"
+  },
+  "mistral-7b": {
+   "hf_id": "mistralai/Mistral-7B-Instruct-v0.3",
+   "revision": "c170c708c41dac9275d15a8fff4eca08d52bab71"
+  },
+  "qwen2.5-7b": {
+   "hf_id": "Qwen/Qwen2.5-7B-Instruct",
+   "revision": "a09a35458c702b33eeacc393d103063234e8bc28"
+  }
+ },
+ "implementation": "Choi, Zhu & Li 2025 (debate-or-vote @82c929e), ported in hmad/choi.py"
+}

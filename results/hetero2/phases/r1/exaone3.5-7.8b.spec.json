@@ -1,0 +1,33 @@
+{
+ "model_key": "exaone3.5-7.8b",
+ "jobs": "/kaggle/working/results/hetero2/phases/r1/exaone3.5-7.8b.jobs.jsonl",
+ "out": "/kaggle/working/results/hetero2/phases/r1/exaone3.5-7.8b.out.jsonl",
+ "meta": "/kaggle/working/results/hetero2/phases/r1/exaone3.5-7.8b.meta.json",
+ "engine": {
+  "gpus": [
+   0,
+   1
+  ],
+  "tensor_parallel_size": 2,
+  "dtype": "half",
+  "max_model_len": 8192,
+  "gpu_memory_utilization": 0.9,
+  "enforce_eager": true,
+  "model_cache_dir": "/tmp/models",
+  "disk_budget_gb": 40,
+  "model_search_paths": [
+   "/kaggle/input"
+  ]
+ },
+ "sampling": {
+  "temperature": 1.0,
+  "top_p": 0.9,
+  "max_tokens": 512,
+  "hf_generate_defaults": true,
+  "chat_template": true
+ },
+ "trust_remote_code": true,
+ "ctx": 32768,
+ "model_path": "/tmp/models/exaone3.5-7.8b",
+ "model_source": "hf:LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct@553ea250b9a5317231459279d5847d6cf955b9aa"
+}

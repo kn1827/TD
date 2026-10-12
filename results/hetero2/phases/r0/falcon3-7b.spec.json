@@ -1,0 +1,33 @@
+{
+ "model_key": "falcon3-7b",
+ "jobs": "/kaggle/working/results/hetero2/phases/r0/falcon3-7b.jobs.jsonl",
+ "out": "/kaggle/working/results/hetero2/phases/r0/falcon3-7b.out.jsonl",
+ "meta": "/kaggle/working/results/hetero2/phases/r0/falcon3-7b.meta.json",
+ "engine": {
+  "gpus": [
+   0,
+   1
+  ],
+  "tensor_parallel_size": 2,
+  "dtype": "half",
+  "max_model_len": 8192,
+  "gpu_memory_utilization": 0.9,
+  "enforce_eager": true,
+  "model_cache_dir": "/tmp/models",
+  "disk_budget_gb": 40,
+  "model_search_paths": [
+   "/kaggle/input"
+  ]
+ },
+ "sampling": {
+  "temperature": 1.0,
+  "top_p": 0.9,
+  "max_tokens": 512,
+  "hf_generate_defaults": true,
+  "chat_template": true
+ },
+ "trust_remote_code": false,
+ "ctx": 32768,
+ "model_path": "/tmp/models/falcon3-7b",
+ "model_source": "hf:tiiuae/Falcon3-7B-Instruct@1e57a0ecd176c7c139f289c60a74e57f887c3dfb"
+}

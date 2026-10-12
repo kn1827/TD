@@ -14,7 +14,7 @@ Thư mục này chỉ chứa phần riêng của Kaggle. Code lõi (`hmad/`, `co
    git push origin main
    git rev-parse HEAD        # ghi lại mã commit này
    ```
-   `git add -A` cũng ghi nhận việc xóa code cũ (`tdmad/`, `analysis/`…). `debate-or-vote/`, `results/` và `.cache/` không bị đưa lên vì đã có trong `.gitignore`.
+   `git add -A` cũng ghi nhận việc xóa code cũ (`tdmad/`, `analysis/`…). `debate-or-vote/`, `.cache/`, `results/hetero1` và các thư mục `logs/` không bị đưa lên vì đã có trong `.gitignore`. Các run khác trong `results/` được đưa lên để Kaggle chạy tiếp (mục D.4).
 3. **Nếu repo riêng tư:** tạo token GitHub kiểu fine-grained, chỉ cấp quyền *Contents: Read-only* cho đúng repo `TD`. Repo công khai thì bỏ qua bước này.
 
 ## B. Tạo notebook
@@ -49,11 +49,18 @@ Mỗi `phases/r0/<model>.meta.json` có `chat_template_example`: prompt đầu t
 1. Sửa ô đầu tiên: `COMMIT` (nếu có commit mới), `RESUME = False`.
 2. **Save Version → Save & Run All (Commit).** Chạy kiểu này thì notebook chạy nền, không cần mở trình duyệt. Notebook **không đặt giờ dừng**: chạy tới khi xong cả 5 vòng (r0 + 4 vòng debate).
 3. Trong lúc chạy, `results/` được nén thành `/kaggle/working/results.zip` mỗi 30 phút (đổi bằng biến môi trường `ZIP_EVERY_MIN`), và một lần nữa khi chạy xong. Tải một file này về là đủ.
-4. **Chạy tiếp** (khi phiên bị ngắt giữa chừng):
-   - Edit notebook → **Add Input → Your Work → Notebook Output** → chọn version vừa chạy. Hoặc tải `results.zip` lên thành một Kaggle Dataset rồi thêm làm Input.
-   - Đặt `RESUME = True`, rồi Save & Run All lần nữa.
-   - Ô thứ 2 chép `results/` (hoặc giải nén `.zip` có `results/` bên trong) vào `/kaggle/working`, in số phase đã xong. Phase nào đã xong không chạy lại.
-   - `RESUME = True` mà Input không có kết quả cũ thì notebook dừng báo lỗi, để không vô tình chạy lại từ đầu.
+4. **Chạy tiếp** (khi phiên bị ngắt giữa chừng), qua `results/` của repo:
+   - Tải `results.zip` về, giải nén vào thư mục `TD` trên máy (zip có sẵn `results/<run>/` bên trong), rồi đẩy lên GitHub:
+     ```bash
+     unzip -o results.zip
+     git add results/hetero2
+     git commit -m "hetero2: results after session N"
+     git push origin main
+     ```
+     `logs/` không được đưa lên (đã có trong `.gitignore`), và chạy tiếp cũng không cần nó.
+   - Save & Run All lần nữa (`COMMIT = "main"` hoặc mã commit mới). `kaggle_run.sh` chép `results/` của repo vào `/kaggle/working/results` rồi in số phase đã xong của mỗi run. Phase nào đã xong không chạy lại; phase đang chạy dở lúc chụp zip thì chạy lại từ đầu.
+   - Không cần Input, `RESUME` để `False` cũng được.
+   - Cách cũ vẫn dùng được: **Add Input → Your Work → Notebook Output** (hoặc Dataset chứa `results.zip`), đặt `RESUME = True`. Ô thứ 2 chép kết quả từ Input; file nào đã có thì `kaggle_run.sh` không ghi đè bằng bản trong repo. `RESUME = True` mà cả repo lẫn Input đều không có kết quả cũ thì notebook dừng báo lỗi.
 5. **Kết quả cuối:** log in `[run] 1000 debates -> .../debates.jsonl`; Output có `results/hetero2/debates.jsonl`, `summary.md` và `results.zip`.
 
 **Thời gian:** hetero1 (không chat template, nhiều lượt chạy tới 512 token) mất khoảng 10 giờ cho 3 vòng r0–r2. Đủ 5 vòng có thể tới khoảng 20 giờ; có chat template thì câu trả lời ngắn hơn nên có thể nhanh hơn. **Quota:** 30 giờ GPU mỗi tuần, xem ở thanh bên phải của Kaggle.
@@ -65,13 +72,13 @@ Mỗi `phases/r0/<model>.meta.json` có `chat_template_example`: prompt đầu t
 | Ô | Việc |
 |---|---|
 | 1 | Đọc secrets (nếu có); `git clone` rồi `git checkout COMMIT`; đặt `RESUME` |
-| 2 | Nếu `RESUME = True`: chép `results/` hoặc giải nén `.zip` của phiên trước (trong `/kaggle/input`) vào `/kaggle/working/results` |
+| 2 | In các run có trong `results/` của repo. Nếu `RESUME = True`: chép `results/` hoặc giải nén `.zip` của phiên trước (trong `/kaggle/input`) vào `/kaggle/working/results` |
 | 3 | `bash kaggle/setup.sh {VLLM_VERSION}`: cài vLLM, gỡ `torchaudio` (Kaggle dựng sẵn cho CUDA khác với torch của vLLM), cài `requirements.txt`, in phiên bản và kiểm tra torch tính được trên GPU |
-| 4 | `bash kaggle/kaggle_run.sh main` (chạy `configs/exp.yaml`; nén `results.zip` mỗi 30 phút và khi xong) |
+| 4 | `bash kaggle/kaggle_run.sh main` (chép `results/` của repo vào `/kaggle/working/results`, chạy `configs/exp.yaml`; nén `results.zip` mỗi 30 phút và khi xong) |
 | 5 | In `results/*/summary.md` |
 
 `kaggle_run.sh` tạo một config phụ kế thừa `configs/smoke.yaml` hoặc `configs/exp.yaml`, chỉ đổi phần riêng của Kaggle:
-- kết quả lưu ở `/kaggle/working/results`;
+- kết quả lưu ở `/kaggle/working/results`. Trước khi chạy, mọi file trong `results/` của repo chưa có ở đó được chép vào, nên run nào đã đẩy lên GitHub thì chạy tiếp được;
 - trọng số mô hình lưu ở thư mục ghi được đầu tiên trong `/tmp/models`, `/root/hmad_models` (thử ghi 256 MB trước), không chiếm 20 GB của `/kaggle/working`;
 - giới hạn đĩa cho mô hình mặc định 40 GB (2 mô hình: mô hình đang chạy và mô hình tải trước). `df` trên Kaggle báo dung lượng của cả máy chủ, không phải hạn mức thật của phiên. Hạn mức thật khoảng 120 GB, tính cả khoảng 30 GB gói cài đặt; vượt hạn mức thì ổ chuyển sang chỉ đọc tới hết phiên. Đặt `CACHE_GB=...` để đổi;
 - tìm bản sao mô hình trong `/kaggle/input` trước khi tải.

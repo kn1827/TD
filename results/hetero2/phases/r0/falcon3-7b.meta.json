@@ -1,0 +1,35 @@
+{
+ "model_key": "falcon3-7b",
+ "model_path": "/tmp/models/falcon3-7b",
+ "model_source": "hf:tiiuae/Falcon3-7B-Instruct@1e57a0ecd176c7c139f289c60a74e57f887c3dfb",
+ "n": 200,
+ "seconds": 280.8,
+ "sampling_effective": {
+  "temperature": 1.0,
+  "top_p": 0.9,
+  "max_tokens": 512,
+  "top_k": 50,
+  "repetition_penalty": 1.0
+ },
+ "load_seconds": 85.2,
+ "generate_seconds": 104.6,
+ "too_long": 0,
+ "vllm_version": "0.31.0",
+ "engine_args": {
+  "model": "/tmp/models/falcon3-7b",
+  "tokenizer": "/tmp/models/falcon3-7b",
+  "dtype": "half",
+  "tensor_parallel_size": 2,
+  "max_model_len": 8192,
+  "gpu_memory_utilization": 0.9,
+  "enforce_eager": true,
+  "trust_remote_code": false,
+  "seed": 0
+ },
+ "chat_template_example": "<|user|>\nFinley went to the grocery store and bought rice, beans, and pork for use in their home. It took her 20 more minutes to cook pork than rice, while beans took half the combined cooking time of pork and rice. If it took her 30 minutes to cook rice, how long in minutes did it take to cook all the food? Make sure to state your final answer in curly brackets at the very end of your response, just like: \"{final answer: 123}\".\n<|assistant|>\n",
+ "torch_version": "2.13.0+cu130",
+ "gpus": [
+  "Tesla T4",
+  "Tesla T4"
+ ]
+}
