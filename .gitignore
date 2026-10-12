@@ -1,5 +1,4 @@
 results/hetero1
-logs/
 __pycache__/
 *.pyc
 .venv/
